@@ -203,6 +203,7 @@ namespace Anya
 		// 大于128的块交由第一级配置器回收
 		if (n > __MAX__BYTES) {
 			malloc_alloc::deallocate(p, n);
+			return;
 		}
 		// 小区块则回收至 free-list 
 		my_free_list = free_list + FREELIST_INDEX(n);
@@ -279,7 +280,43 @@ namespace Anya
 		}
 		else {
 			// 剩余空间连一个块都提供不了  
-			// to-do
+			size_t bytes_to_get = 2 * total_bytes + ROUND_UP(heap_size >> 4);
+			// 如果内存池中还有剩余的块，先配给适当的 free-list
+			if (bytes_left > 0) {
+				obj* volatile* my_free_list = free_list + FREELIST_INDEX(bytes_left);
+				((obj*)start_free)->free_list_link = *my_free_list;
+				*my_free_list = (obj*)start_free;
+			}
+
+			start_free = (char*)malloc(bytes_to_get);
+
+			// heap空间不足，malloc 失败
+			if (start_free == nullptr) {
+				obj* volatile* my_free_list = nullptr;
+				obj* p = nullptr;
+				// 试着看看我们手上的 free-list, 寻找适当的 free-list
+				// 合适指的是"未使用但区块足够大"的 free-list
+				// 不要尝试配置小区块，因为在多线程下很有可能是有问题的
+				for (int i = size; i <= __MAX__BYTES; i += __ALIGN) {
+					my_free_list = free_list + FREELIST_INDEX(i);
+					p = *my_free_list;
+					if (p) {
+						// free-list 尚有未用合适之区块
+						*my_free_list = p->free_list_link;
+						start_free = (char*)p;
+						end_free = start_free + i;
+						// 在调整 nobjs 的同时，内存池中的残余零头将会被配置到合适的 free-list
+						return chunk_malloc(size, nobjs);
+					}
+				}
+				end_free = nullptr;   //内存池中一滴都不剩了
+				start_free = (char*)malloc_alloc::allocate(bytes_to_get);  // 转去调用第一级分配器，看看oom还能不能抢救一下，不能则抛出异常
+			}
+
+			heap_size += bytes_to_get;
+			end_free = start_free + bytes_to_get;
+			// 递归调用自己，为了修正 nobjs
+			return chunk_malloc(size, nobjs);
 		}
 	}
 
