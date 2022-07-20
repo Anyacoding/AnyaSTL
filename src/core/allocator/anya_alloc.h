@@ -5,6 +5,7 @@
 #include <cstdlib>      // for exit()
 #include <cstddef>      // for UNIT_MAX
 #include <climits>      // for cerr
+#include <cstring>
 
 #ifndef __THROW_BAD_ALLOC
 #  if defined(__STL_NO_BAD_ALLOC) || !defined(__STL_USE_EXCEPTIONS)
@@ -22,24 +23,6 @@
 
 namespace Anya
 {
-
-	template<class T, class Alloc = alloc>
-	class allocator {
-	public:
-		static T* allocate(size_t n) { 
-			return n == 0 ? nullptr : (T*)Alloc::allocate(n * sizeof(T));
-		}
-		static T* allocate() { 
-			return (T*)Alloc::allocate(sizeof(T));
-		}
-		static void deallocate(T* p, size_t n) { 
-			if (n != 0) Alloc::deallocate(p, n * sizeof(T));
-		}
-		static void deallocate(T* p) {
-			Alloc::deallocate(p, sizeof(T));
-		}
-	};
-
 	// 第一级配置器 malloc_based allocator
 	// 无模板形参，而非模板形参 inst 其实也没有被用上
 	// 因为用的是malloc，所以一般是 thread safe 的
@@ -326,6 +309,23 @@ using alloc = malloc_alloc;
 #else 
 using alloc = __default_alloc_template<__NODE_ALLOCATOR_THREADS, 0>;
 #endif 
+
+	template<class T, class Alloc = alloc>
+	class allocator {
+	public:
+		static T* allocate(size_t n) { 
+			return n == 0 ? nullptr : (T*)Alloc::allocate(n * sizeof(T));
+		}
+		static T* allocate() { 
+			return (T*)Alloc::allocate(sizeof(T));
+		}
+		static void deallocate(T* p, size_t n) { 
+			if (n != 0) Alloc::deallocate(p, n * sizeof(T));
+		}
+		static void deallocate(T* p) {
+			Alloc::deallocate(p, sizeof(T));
+		}
+	};
 
 }
 
