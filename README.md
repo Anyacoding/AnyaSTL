@@ -29,21 +29,21 @@
 本项目核心
 ### 序列容器
 - [ ] array
-静态数组         
+  静态数组         
 - [ ] vector
-动态数组
+  动态数组
 - [ ] list
-双向链表
+  双向链表
 - [ ] deque
-双端队列
+  双端队列
 - [ ] stack
-栈
+  栈
 - [ ] queue
-队列
+  队列
 - [ ] priority_queue
-优先队列
+  优先队列
 - [ ] forward_list
-单向链表
+  单向链表
 
 ### 关联式容器
 - [ ]  RB-tree
