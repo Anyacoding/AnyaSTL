@@ -28,46 +28,46 @@
 ## 容器
 本项目核心
 ### 序列容器
-- [ ] array
-  静态数组         
-- [ ] vector
+- [ ] array  
+  静态数组
+- [ ] vector  
   动态数组
-- [ ] list
+- [ ] list  
   双向链表
-- [ ] deque
-  双端队列
-- [ ] stack
+- [ ] deque  
+  双端列表
+- [ ] stack  
   栈
-- [ ] queue
+- [ ] queue  
   队列
-- [ ] priority_queue
+- [ ] heap  
+  序列容器上的一系列操作函数
+- [ ] priority_queue  
   优先队列
-- [ ] forward_list
+- [ ] forward_list  
   单向链表
 
 ### 关联式容器
-- [ ]  RB-tree
-红黑树, set和map的基础
-- [ ] set
-有序集合
-- [ ] map
-有序映射
-- [ ] multiset
-有序可重复集合
-- [ ] multimap
-有序可重复映射
-- [ ] hashtable
-哈希表, unordered_set和unordered_map的基础
-- [ ] unordered_set
-无序集合
-- [ ] unordered_map
-无序映射
-- [ ] unordered_multiset
-单向链表
-- [ ] unordered_map
-无序可重复集合
-- [ ] unordered_multimap
-无序可重复映射
+- [ ] RB-tree  
+  红黑树, set和map的基础
+- [ ] set  
+  有序集合
+- [ ] map  
+  有序映射
+- [ ] multiset  
+  有序可重复集合
+- [ ] multimap  
+  有序可重复映射
+- [ ] hashtable  
+  哈希表, unordered_set和unordered_map的基础
+- [ ] unordered_set  
+  无序集合
+- [ ] unordered_map  
+  无序映射
+- [ ] unordered_multiset  
+  无序可重复集合
+- [ ] unordered_multimap  
+  无序可重复映射
 ## 算法
 - TODO
 ## 仿函数
