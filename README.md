@@ -62,7 +62,7 @@
   哈希表, unordered_set和unordered_map的基础
 - [ ] unordered_set  
   无序集合
-- [x] unordered_map  
+- [ ] unordered_map  
   无序映射
 - [ ] unordered_multiset  
   无序可重复集合
