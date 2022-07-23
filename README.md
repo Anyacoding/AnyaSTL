@@ -30,19 +30,19 @@
 ### 序列容器
 - [ ] array  
   静态数组
-- [x] vector  
+- [ ] vector  
   动态数组
-- [x] list  
+- [ ] list  
   双向链表
-- [x] deque  
+- [ ] deque  
   双端列表
 - [ ] stack  
   栈
 - [ ] queue  
   队列
-- [x] heap  
+- [ ] heap  
   序列容器上的一系列操作函数
-- [x] priority_queue  
+- [ ] priority_queue  
   优先队列
 - [ ] forward_list  
   单向链表
@@ -58,7 +58,7 @@
   有序可重复集合
 - [ ] multimap  
   有序可重复映射
-- [x] hashtable  
+- [ ] hashtable  
   哈希表, unordered_set和unordered_map的基础
 - [ ] unordered_set  
   无序集合
