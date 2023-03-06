@@ -7,7 +7,7 @@
 - 学习现实中算法的实际运用和实现方法
 ## 编译环境
 - C++20
-- MinGW  GCC 8.2.0
+- MinGW w64 9.0
 ## 参考书籍
 - 《STL源码剖析》
 - 《Effective Modern C++》
