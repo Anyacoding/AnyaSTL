@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <climits>
 #include <cstring>
+#include <numeric>
 
 namespace anya {
 
@@ -351,23 +352,20 @@ public:
     ~allocator() = default;
 
     // 开辟内存
-    pointer
+    [[nodiscard]] constexpr pointer
     allocate(size_t n) {
+        if (std::numeric_limits<std::size_t>::max() / sizeof(T) < n)
+            throw std::bad_array_new_length();
         return n == 0 ? nullptr : (T*)Alloc::allocate(n * sizeof(T));
     }
 
-    pointer
-    allocate() {
-        return (T*)Alloc::allocate(sizeof(T));
-    }
-
     // 回收内存
-    void
+    constexpr void
     deallocate(T* p, size_t n) const noexcept {
         if (n != 0) Alloc::deallocate(p, n * sizeof(T));
     }
 
-    void
+    constexpr void
     deallocate(T* p) const noexcept {
         Alloc::deallocate(p, sizeof(T));
     }
@@ -384,11 +382,11 @@ public:
     };
 
     // 构造已开辟内存的对象
-    template< class U, class... Args >
+    template<class U, class... Args>
     void
     construct(U* p, Args&&... args) {
         ::new(const_cast<void*>(static_cast<const volatile void*>(p)))
-        value_type(std::forward<Args>(args)...);
+            U(std::forward<Args>(args)...);
     }
 
     // 析构已经开辟内存的对象
@@ -408,6 +406,124 @@ private:
                );
     };
 };
+
+#pragma endregion
+
+
+#pragma region 未初始化内存算法
+
+// TODO: 后续可以用概念来约束迭代器类型
+
+/*!
+ * @tparam InputIt
+ * @tparam NoThrowForwardIt
+ * @param first     要复制的元素的左闭上界
+ * @param last      要复制的元素的右开下界
+ * @param d_first   目标范围的起始
+ * @return          指向最后复制的元素后一元素的迭代器
+ */
+template<class InputIt, class NoThrowForwardIt>
+NoThrowForwardIt
+uninitialized_copy(InputIt first, InputIt last, NoThrowForwardIt d_first) {
+    using T = typename std::iterator_traits<NoThrowForwardIt>::value_type;
+    NoThrowForwardIt current = d_first;
+    try {
+        for (; first != last; ++first, (void)++current) {
+            ::new(static_cast<void*>(std::addressof(*current))) T(*first);
+        }
+        return current;
+    }
+    catch (...) {
+        for (; d_first != current; ++d_first) {
+            d_first->~T();
+        }
+        throw;
+    }
+}
+
+/*!
+ *
+ * @tparam InputIt
+ * @tparam Size
+ * @tparam NoThrowForwardIt
+ * @param first     要复制的元素的左闭上界
+ * @param count     要重复复制的次数
+ * @param d_first   目标范围的起始
+ * @return          指向最后复制的元素后一元素的迭代器
+ */
+template<class InputIt, class Size, class NoThrowForwardIt>
+NoThrowForwardIt
+uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
+    using T = typename std::iterator_traits<NoThrowForwardIt>::value_type;
+    NoThrowForwardIt current = d_first;
+    try {
+        for (; count > 0; ++first, (void)++current, --count) {
+            ::new(static_cast<void*>(std::addressof(*current))) T(*first);
+        }
+        return current;
+    }
+    catch (...) {
+        for (; d_first != current; ++d_first) {
+            d_first->~T();
+        }
+        throw;
+    }
+}
+
+/*!
+ *
+ * @tparam ForwardIt
+ * @tparam T
+ * @param first   要初始化的元素的左闭上界
+ * @param last    要初始化的元素的右开下界
+ * @param value   构造元素所用的值
+ */
+template<class ForwardIt, class T>
+void
+uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
+    using V = typename std::iterator_traits<ForwardIt>::value_type;
+    ForwardIt current = first;
+    try {
+        for (; current != last; ++current) {
+            ::new(static_cast<void*>(std::addressof(*current))) V(value);
+        }
+    }
+    catch (...) {
+        for (; first != current; ++first) {
+            first->~V();
+        }
+        throw;
+    }
+}
+
+/*!
+ *
+ * @tparam ForwardIt
+ * @tparam Size
+ * @tparam T
+ * @param first   要初始化的元素的左闭上界
+ * @param count   要构造的元素数量
+ * @param value   构造元素所用的值
+ * @return        指向最后初始化的元素后一元素的迭代器
+ */
+template<class ForwardIt, class Size, class T>
+ForwardIt
+uninitialized_fill_n(ForwardIt first, Size count, const T& value) {
+    using V = typename std::iterator_traits<ForwardIt>::value_type;
+    ForwardIt current = first;
+    try {
+        for (; count > 0; ++current, (void)--count) {
+            ::new(static_cast<void*>(std::addressof(*current))) V(value);
+        }
+        return current;
+    }
+    catch (...) {
+        for (; first != current; ++first) {
+            first->~V();
+        }
+        throw;
+    }
+}
 
 #pragma endregion
 

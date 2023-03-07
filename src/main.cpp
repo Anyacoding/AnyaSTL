@@ -2,7 +2,7 @@
 #include <memory>
 #include <ctime>
 #include <vector>
-#include "allocator/anya_alloc.hpp"
+#include "allocator/memory.hpp"
 
 int main() {
     clock_t start, end;
