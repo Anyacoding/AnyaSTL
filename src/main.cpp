@@ -1,7 +1,5 @@
-#include "tests/memory_test.h"
-
-
-
+#include "gtest/gtest.h"
+#include <iterator>
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);

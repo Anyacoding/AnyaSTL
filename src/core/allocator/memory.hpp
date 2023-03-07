@@ -9,9 +9,9 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstddef>
-#include <climits>
-#include <cstring>
 #include <numeric>
+#include <iterator>
+#include <concepts>
 
 namespace anya {
 
@@ -327,18 +327,19 @@ using alloc = malloc_alloc;
 using alloc = default_alloc_template<NODE_ALLOCATOR_THREADS, 0>;
 #endif
 
+
 template<class T, class Alloc = alloc>
 class allocator {
 public:
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
+    using value_type                             = T;
+    using pointer                                = T*;
+    using const_pointer                          = const T*;
+    using reference                              = T&;
+    using const_reference                        = const T&;
+    using size_type                              = std::size_t;
+    using difference_type                        = std::ptrdiff_t;
     using propagate_on_container_move_assignment = std::true_type;
-    using is_always_equal = std::true_type;
+    using is_always_equal                        = std::true_type;
 
     // 重新绑定分配器
     template<class U>
@@ -381,6 +382,7 @@ public:
         return address_of(x);
     };
 
+    // TODO: 针对POD进行优化
     // 构造已开辟内存的对象
     template<class U, class... Args>
     void
@@ -423,7 +425,7 @@ private:
  * @param d_first   目标范围的起始
  * @return          指向最后复制的元素后一元素的迭代器
  */
-template<class InputIt, class NoThrowForwardIt>
+template<std::input_iterator InputIt, std::forward_iterator NoThrowForwardIt>
 NoThrowForwardIt
 uninitialized_copy(InputIt first, InputIt last, NoThrowForwardIt d_first) {
     using T = typename std::iterator_traits<NoThrowForwardIt>::value_type;
@@ -451,7 +453,7 @@ uninitialized_copy(InputIt first, InputIt last, NoThrowForwardIt d_first) {
  * @param d_first   目标范围的起始
  * @return          指向最后复制的元素后一元素的迭代器
  */
-template<class InputIt, class Size, class NoThrowForwardIt>
+template<std::input_iterator InputIt, class Size, std::forward_iterator NoThrowForwardIt>
 NoThrowForwardIt
 uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
     using T = typename std::iterator_traits<NoThrowForwardIt>::value_type;
@@ -477,7 +479,7 @@ uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
  * @param last    要初始化的元素的右开下界
  * @param value   构造元素所用的值
  */
-template<class ForwardIt, class T>
+template<std::forward_iterator ForwardIt, class T>
 void
 uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
     using V = typename std::iterator_traits<ForwardIt>::value_type;
@@ -495,6 +497,7 @@ uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
     }
 }
 
+
 /*!
  * @tparam ForwardIt
  * @tparam Size
@@ -504,7 +507,7 @@ uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
  * @param value   构造元素所用的值
  * @return        指向最后初始化的元素后一元素的迭代器
  */
-template<class ForwardIt, class Size, class T>
+template<std::forward_iterator ForwardIt, class Size, class T>
 ForwardIt
 uninitialized_fill_n(ForwardIt first, Size count, const T& value) {
     using V = typename std::iterator_traits<ForwardIt>::value_type;

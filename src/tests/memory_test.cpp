@@ -2,15 +2,10 @@
 // Created by Anya on 2023/3/7.
 //
 
-#ifndef ANYA_STL_MEMORY_TEST_H
-#define ANYA_STL_MEMORY_TEST_H
-
-#include <iostream>
 #include <memory>
-#include <ctime>
 #include <vector>
-#include <bitset>
 #include "allocator/memory.hpp"
+#include "iterator/iterator.hpp"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
@@ -43,4 +38,3 @@ TEST(MemoryTest, address) {
 
 }
 
-#endif //ANYA_STL_MEMORY_TEST_H
