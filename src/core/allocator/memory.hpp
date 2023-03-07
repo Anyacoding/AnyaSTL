@@ -413,6 +413,7 @@ private:
 #pragma region 未初始化内存算法
 
 // TODO: 后续可以用概念来约束迭代器类型
+// TODO: 此单元还未测试，实现迭代器后回来测试
 
 /*!
  * @tparam InputIt
@@ -442,7 +443,6 @@ uninitialized_copy(InputIt first, InputIt last, NoThrowForwardIt d_first) {
 }
 
 /*!
- *
  * @tparam InputIt
  * @tparam Size
  * @tparam NoThrowForwardIt
@@ -471,7 +471,6 @@ uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
 }
 
 /*!
- *
  * @tparam ForwardIt
  * @tparam T
  * @param first   要初始化的元素的左闭上界
@@ -497,7 +496,6 @@ uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
 }
 
 /*!
- *
  * @tparam ForwardIt
  * @tparam Size
  * @tparam T
