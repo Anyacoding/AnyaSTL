@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "tests/memory_test.hpp"
 #include <iterator>
 
 int main(int argc, char* argv[]) {

@@ -21,7 +21,7 @@ link_directories(${PROJECT_SOURCE_DIR}/external/googletest ${PROJECT_SOURCE_DIR}
 add_executable(main)
 
 # 递归搜索文件并自动更新
-file(GLOB_RECURSE source CONFIGURE_DEPENDS src/*.cpp src/*.c src/*.hpp src/tests/*.cpp)
+file(GLOB_RECURSE source CONFIGURE_DEPENDS src/*.cpp src/*.c src/*.hpp src/tests/*.hpp)
 
 # 添加源文件
 target_sources(main PRIVATE ${source})

@@ -5,23 +5,26 @@
 #ifndef ANYA_STL_ITERATOR_HPP
 #define ANYA_STL_ITERATOR_HPP
 
+#include <cstddef>
+#include <iterator>
+
 namespace anya {
 
 #pragma region 迭代器标签
 struct input_iterator_tag {};
 struct output_iterator_tag {};
-struct forward_iterator_tag : public input_iterator_tag {};
+struct forward_iterator_tag       : public input_iterator_tag {};
 struct bidirectional_iterator_tag : public forward_iterator_tag {};
 struct random_access_iterator_tag : public bidirectional_iterator_tag {};
-struct contiguous_iterator_tag: public random_access_iterator_tag {};
+struct contiguous_iterator_tag    : public random_access_iterator_tag {};
 #pragma endregion
 
 #pragma region 迭代器的默认声明
 template<
     class Category,
     class T,
-    class Distance = std::ptrdiff_t,
-    class Pointer = T*,
+    class Distance  = std::ptrdiff_t,
+    class Pointer   = T*,
     class Reference = T&>
 struct iterator {
     using iterator_category = Category;
@@ -33,7 +36,7 @@ struct iterator {
 
 #pragma endregion
 
-#pragma region 迭代器的萃取器
+#pragma region 迭代器的类型萃取器
 // 主模板
 template<class Iter>
 struct iterator_traits {
@@ -62,6 +65,91 @@ struct iterator_traits<const T*> {
     using pointer           = const T*;
     using reference         = const T&;
 };
+
+// 定义一组便捷的别名模板
+template<class T>
+using iter_category_t   = typename iterator_traits<T>::iterator_category;
+
+template<class T>
+using iter_value_t      = typename iterator_traits<T>::value_type;
+
+template<class T>
+using iter_difference_t = typename iterator_traits<T>::difference_type;
+
+template<class T>
+using iter_pointer_t    = typename iterator_traits<T>::pointer;
+
+template<class T>
+using iter_reference_t  = typename iterator_traits<T>::reference;
+
+#pragma endregion
+
+
+#pragma region 迭代器操作
+
+// advance函数组辅助函数
+template<class InputIt, class Distance>
+constexpr void
+advance_aux(InputIt& it, Distance n, input_iterator_tag) {
+    while (n--) ++it;
+}
+
+template<class BidirectionalIt, class Distance>
+constexpr void
+advance_aux(BidirectionalIt& it, Distance n, bidirectional_iterator_tag) {
+    if (n >= 0)
+        while (n--) ++it;
+    else
+        while (n++) --it;
+}
+
+template<class RandomAccessIt, class Distance>
+constexpr void
+advance_aux(RandomAccessIt& it, Distance n, random_access_iterator_tag) {
+    it += n;
+}
+
+/*!
+ * @tparam InputIt
+ * @tparam Distance
+ * @param it 迭代器起始位置
+ * @param n  迭代器位移步数
+ * @return
+ */
+template<class InputIt, class Distance>
+constexpr void
+advance(InputIt& it, Distance n) {
+    advance_aux(it, n, iter_category_t<InputIt>());
+}
+
+// distance函数组辅助函数
+template<class InputIt>
+constexpr iter_difference_t<InputIt>
+distance_aux(InputIt first, InputIt last, input_iterator_tag) {
+    iter_difference_t<InputIt> n = 0;
+    while (first != last) {
+        ++first, ++n;
+    }
+    return n;
+}
+
+template<class RandomAccessIt>
+constexpr iter_difference_t<RandomAccessIt>
+distance_aux(RandomAccessIt first, RandomAccessIt last, random_access_iterator_tag) {
+    return last - first;
+}
+
+/*!
+ * @tparam InputIt
+ * @param first  迭代器起始位置
+ * @param last   迭代器结束位置
+ * @return       迭代器之间的距离
+ */
+template<class InputIt>
+constexpr iter_difference_t<InputIt>
+distance(InputIt first, InputIt last) {
+    return distance_aux(first, last, iter_category_t<InputIt>());
+}
 
 #pragma endregion
 
