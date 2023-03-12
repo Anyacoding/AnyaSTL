@@ -84,6 +84,131 @@ using iter_reference_t  = typename iterator_traits<T>::reference;
 
 #pragma endregion
 
+#pragma region 通用迭代器实现
+template<class Iterator, class Container>
+class normal_iterator {
+protected:
+    Iterator current;
+    using iterator_type = Iterator;
+
+public:
+    using iterator_category = iter_category_t   <iterator_type>;
+    using value_type        = iter_value_t      <iterator_type>;
+    using difference_type   = iter_difference_t <iterator_type>;
+    using reference         = iter_reference_t  <iterator_type>;
+    using pointer           = iter_pointer_t    <iterator_type>;
+
+public:
+    normal_iterator() noexcept : current{} {}
+
+    normal_iterator(const normal_iterator& it) noexcept : current(it.current) {}
+
+    normal_iterator(normal_iterator&&) noexcept = default;
+
+    explicit normal_iterator(const Iterator& it) noexcept : current(it) {}
+
+    normal_iterator& operator=(const normal_iterator&) noexcept = default;
+
+    ~normal_iterator() = default;
+
+public:
+    constexpr reference
+    operator*() const noexcept { return *current; }
+
+    constexpr pointer
+    operator->() const noexcept { return current; }
+
+    constexpr normal_iterator&
+    operator++() noexcept {
+        return ++current, *this;
+    }
+
+    constexpr normal_iterator
+    operator++(int) noexcept {
+        return normal_iterator(current++);
+    }
+
+    constexpr normal_iterator&
+    operator--() noexcept {
+        return --current, *this;
+    }
+
+    constexpr normal_iterator
+    operator--(int) noexcept {
+        return normal_iterator(current--);
+    }
+
+    constexpr reference
+    operator[](difference_type n) const noexcept {
+        return *(current + n);
+    }
+
+    constexpr normal_iterator&
+    operator+=(difference_type n) noexcept {
+        return current += n, *this;
+    }
+
+    constexpr normal_iterator
+    operator+(difference_type n) const noexcept {
+        return normal_iterator(current + n);
+    }
+
+    constexpr normal_iterator&
+    operator-=(difference_type n) noexcept {
+        return current -= n, *this;
+    }
+
+    constexpr normal_iterator
+    operator-(difference_type n) const noexcept {
+        return normal_iterator(current - n);
+    }
+
+    constexpr const Iterator&
+    base() const noexcept { return current; }
+
+    friend bool
+    operator==(const normal_iterator& lhs, const normal_iterator& rhs) {
+        return lhs.current == rhs.current;
+    }
+
+    friend bool
+    operator!=(const normal_iterator& lhs, const normal_iterator& rhs) {
+        return rhs.current != lhs.current;
+    }
+
+    friend bool
+    operator<(const normal_iterator& lhs, const normal_iterator& rhs) {
+        return lhs.current < rhs.current;
+    }
+
+    friend bool
+    operator>(const normal_iterator& lhs, const normal_iterator& rhs) {
+        return lhs.current > rhs.current;
+    }
+
+    friend bool
+    operator<=(const normal_iterator& lhs, const normal_iterator& rhs) {
+        return lhs.current <= rhs.current;
+    }
+
+    friend bool
+    operator>=(const normal_iterator& lhs, const normal_iterator& rhs) {
+        return lhs.current >= rhs.current;
+    }
+
+    friend difference_type
+    operator-(const normal_iterator& lhs, const normal_iterator& rhs) {
+        return lhs.current - rhs.current;
+    }
+
+    friend normal_iterator
+    operator+(difference_type n, const normal_iterator& rhs) {
+        return rhs + n;
+    }
+};
+
+#pragma endregion
+
 
 #pragma region 迭代器操作
 

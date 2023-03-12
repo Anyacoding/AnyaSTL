@@ -372,12 +372,12 @@ public:
     }
 
     // 取地址
-    pointer
+    constexpr pointer
     address(reference x) const noexcept {
         return address_of(x);
     };
 
-    const_pointer
+    constexpr const_pointer
     address(const_reference x) const noexcept {
         return address_of(x);
     };
@@ -385,7 +385,7 @@ public:
     // TODO: 针对POD进行优化
     // 构造已开辟内存的对象
     template<class U, class... Args>
-    void
+    constexpr void
     construct(U* p, Args&&... args) {
         ::new(const_cast<void*>(static_cast<const volatile void*>(p)))
             U(std::forward<Args>(args)...);
@@ -393,13 +393,13 @@ public:
 
     // 析构已经开辟内存的对象
     template< class U >
-    void
+    constexpr void
     destroy(U* p) {
         p->~U();
     }
 
 private:
-    pointer
+    constexpr pointer
     address_of(const_reference x) const noexcept {
         return reinterpret_cast<pointer> (
                     &const_cast<std::byte&> (
@@ -424,7 +424,7 @@ private:
  * @param d_first   目标范围的起始
  * @return          指向最后复制的元素后一元素的迭代器
  */
-template<std::input_iterator InputIt, std::forward_iterator NoThrowForwardIt>
+template<class InputIt, class NoThrowForwardIt>
 NoThrowForwardIt
 uninitialized_copy(InputIt first, InputIt last, NoThrowForwardIt d_first) {
     using T = typename std::iterator_traits<NoThrowForwardIt>::value_type;
@@ -452,7 +452,7 @@ uninitialized_copy(InputIt first, InputIt last, NoThrowForwardIt d_first) {
  * @param d_first   目标范围的起始
  * @return          指向最后复制的元素后一元素的迭代器
  */
-template<std::input_iterator InputIt, class Size, std::forward_iterator NoThrowForwardIt>
+template<class InputIt, class Size, class NoThrowForwardIt>
 NoThrowForwardIt
 uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
     using T = typename std::iterator_traits<NoThrowForwardIt>::value_type;
@@ -478,7 +478,7 @@ uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
  * @param last    要初始化的元素的右开下界
  * @param value   构造元素所用的值
  */
-template<std::forward_iterator ForwardIt, class T>
+template<class ForwardIt, class T>
 void
 uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
     using V = typename std::iterator_traits<ForwardIt>::value_type;
@@ -506,7 +506,7 @@ uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
  * @param value   构造元素所用的值
  * @return        指向最后初始化的元素后一元素的迭代器
  */
-template<std::forward_iterator ForwardIt, class Size, class T>
+template<class ForwardIt, class Size, class T>
 ForwardIt
 uninitialized_fill_n(ForwardIt first, Size count, const T& value) {
     using V = typename std::iterator_traits<ForwardIt>::value_type;
