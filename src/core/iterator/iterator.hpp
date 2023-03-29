@@ -99,15 +99,15 @@ public:
     using pointer           = iter_pointer_t    <iterator_type>;
 
 public:
-    normal_iterator() noexcept : current{} {}
+    constexpr normal_iterator() noexcept : current{} {}
 
-    normal_iterator(const normal_iterator& it) noexcept : current(it.current) {}
+    constexpr normal_iterator(const normal_iterator& it) noexcept : current(it.current) {}
 
-    normal_iterator(normal_iterator&&) noexcept = default;
+    constexpr normal_iterator(normal_iterator&&) noexcept = default;
 
-    explicit normal_iterator(const Iterator& it) noexcept : current(it) {}
+    constexpr explicit normal_iterator(const Iterator& it) noexcept : current(it) {}
 
-    normal_iterator& operator=(const normal_iterator&) noexcept = default;
+    constexpr normal_iterator& operator=(const normal_iterator&) noexcept = default;
 
     ~normal_iterator() = default;
 
@@ -166,46 +166,195 @@ public:
     constexpr const Iterator&
     base() const noexcept { return current; }
 
-    friend bool
+    friend constexpr bool
     operator==(const normal_iterator& lhs, const normal_iterator& rhs) {
         return lhs.current == rhs.current;
     }
 
-    friend bool
+    friend constexpr bool
     operator!=(const normal_iterator& lhs, const normal_iterator& rhs) {
         return rhs.current != lhs.current;
     }
 
-    friend bool
+    friend constexpr bool
     operator<(const normal_iterator& lhs, const normal_iterator& rhs) {
         return lhs.current < rhs.current;
     }
 
-    friend bool
+    friend constexpr bool
     operator>(const normal_iterator& lhs, const normal_iterator& rhs) {
         return lhs.current > rhs.current;
     }
 
-    friend bool
+    friend constexpr bool
     operator<=(const normal_iterator& lhs, const normal_iterator& rhs) {
         return lhs.current <= rhs.current;
     }
 
-    friend bool
+    friend constexpr bool
     operator>=(const normal_iterator& lhs, const normal_iterator& rhs) {
         return lhs.current >= rhs.current;
     }
 
-    friend difference_type
+    friend constexpr difference_type
     operator-(const normal_iterator& lhs, const normal_iterator& rhs) {
         return lhs.current - rhs.current;
     }
 
-    friend normal_iterator
+    friend constexpr normal_iterator
     operator+(difference_type n, const normal_iterator& rhs) {
         return rhs + n;
     }
 };
+
+#pragma endregion
+
+#pragma region 逆序迭代器适配器
+template<class Iter>
+class reverse_iterator : public iterator<
+    iter_category_t   <Iter>,
+    iter_value_t      <Iter>,
+    iter_difference_t <Iter>,
+    iter_pointer_t    <Iter>,
+    iter_reference_t  <Iter>> {
+
+protected:
+    Iter current;
+
+public:
+    using iterator_type     = Iter;
+    using iterator_category = iter_category_t   <iterator_type>;
+    using value_type        = iter_value_t      <iterator_type>;
+    using difference_type   = iter_difference_t <iterator_type>;
+    using reference         = iter_reference_t  <iterator_type>;
+    using pointer           = iter_pointer_t    <iterator_type>;
+
+public:
+    constexpr reverse_iterator() : current() {};
+
+    constexpr explicit reverse_iterator(iterator_type x) : current(x) {};
+
+    constexpr reverse_iterator(const reverse_iterator &oth) : current(oth.current) {};
+
+private:
+    template<typename T>
+    constexpr static T*
+    cast_to_pointer(T* t) { return t; }
+
+    template<typename T>
+    constexpr static pointer
+    cast_to_pointer(T t) { return t.operator->(); }
+
+public:
+    constexpr reverse_iterator&
+    operator=(const reverse_iterator& oth) {
+        current = oth.current;
+        return *this;
+    }
+
+    constexpr const iterator_type&
+    base() const noexcept { return current; }
+
+    constexpr reference
+    operator*() const noexcept {
+        iterator_type temp = current;
+        return *--temp;
+    }
+
+    constexpr pointer
+    operator->() const noexcept {
+        iterator_type temp = current;
+        return cast_to_pointer(--temp);
+    }
+
+    constexpr reverse_iterator&
+    operator++() noexcept {
+        return --current, *this;
+    }
+
+    constexpr reverse_iterator
+    operator++(int) noexcept {
+        return reverse_iterator(current--);
+    }
+
+    constexpr reverse_iterator&
+    operator--() noexcept {
+        return ++current, *this;
+    }
+
+    constexpr reverse_iterator
+    operator--(int) noexcept {
+        return reverse_iterator(current++);
+    }
+
+    constexpr reference
+    operator[](difference_type n) const noexcept {
+        return *(*this + n);
+    }
+
+    constexpr reverse_iterator&
+    operator+=(difference_type n) noexcept {
+        return current -= n, *this;
+    }
+
+    constexpr reverse_iterator
+    operator+(difference_type n) const noexcept {
+        return reverse_iterator(current - n);
+    }
+
+    constexpr reverse_iterator&
+    operator-=(difference_type n) noexcept {
+        return current += n, *this;
+    }
+
+    constexpr reverse_iterator
+    operator-(difference_type n) const noexcept {
+        return reverse_iterator(current + n);
+    }
+
+public:
+    friend constexpr bool
+    operator==(const reverse_iterator &lhs, const reverse_iterator &rhs) {
+        return lhs.current == rhs.current;
+    }
+
+    friend constexpr bool
+    operator!=(const reverse_iterator &lhs, const reverse_iterator &rhs) {
+        return lhs.current != rhs.current;
+    }
+
+    friend constexpr bool
+    operator<(const reverse_iterator &lhs, const reverse_iterator &rhs) {
+        return rhs.current < lhs.current;
+    }
+
+    friend constexpr bool
+    operator>(const reverse_iterator &lhs, const reverse_iterator &rhs) {
+        return rhs.current > lhs.current;
+    }
+
+    friend constexpr bool
+    operator<=(const reverse_iterator &lhs, const reverse_iterator &rhs) {
+        return rhs.current <= lhs.current;
+    }
+
+    friend constexpr bool
+    operator>=(const reverse_iterator &lhs, const reverse_iterator &rhs) {
+        return rhs.current >= lhs.current;
+    }
+
+    friend constexpr difference_type
+    operator-(const reverse_iterator &lhs, const reverse_iterator &rhs) {
+        return rhs.current - lhs.current;
+    }
+
+    friend constexpr reverse_iterator
+    operator+(difference_type n, const reverse_iterator &rhs) {
+        return rhs - n;
+    }
+};
+
+
 
 #pragma endregion
 
