@@ -12,6 +12,7 @@
 #include <numeric>
 #include <iterator>
 #include <concepts>
+#include "iterator/iterator.hpp"
 
 namespace anya {
 
@@ -413,9 +414,6 @@ private:
 
 
 #pragma region 未初始化内存算法
-
-// TODO: 后续可以用概念来约束迭代器类型
-
 /*!
  * @tparam InputIt
  * @tparam NoThrowForwardIt
@@ -427,7 +425,7 @@ private:
 template<class InputIt, class NoThrowForwardIt>
 NoThrowForwardIt
 uninitialized_copy(InputIt first, InputIt last, NoThrowForwardIt d_first) {
-    using T = typename std::iterator_traits<NoThrowForwardIt>::value_type;
+    using T = typename anya::iterator_traits<NoThrowForwardIt>::value_type;
     NoThrowForwardIt current = d_first;
     try {
         for (; first != last; ++first, (void)++current) {
@@ -455,7 +453,7 @@ uninitialized_copy(InputIt first, InputIt last, NoThrowForwardIt d_first) {
 template<class InputIt, class Size, class NoThrowForwardIt>
 NoThrowForwardIt
 uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
-    using T = typename std::iterator_traits<NoThrowForwardIt>::value_type;
+    using T = typename anya::iterator_traits<NoThrowForwardIt>::value_type;
     NoThrowForwardIt current = d_first;
     try {
         for (; count > 0; ++first, (void)++current, --count) {
@@ -481,7 +479,7 @@ uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
 template<class ForwardIt, class T>
 void
 uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
-    using V = typename std::iterator_traits<ForwardIt>::value_type;
+    using V = typename anya::iterator_traits<ForwardIt>::value_type;
     ForwardIt current = first;
     try {
         for (; current != last; ++current) {
@@ -509,7 +507,7 @@ uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
 template<class ForwardIt, class Size, class T>
 ForwardIt
 uninitialized_fill_n(ForwardIt first, Size count, const T& value) {
-    using V = typename std::iterator_traits<ForwardIt>::value_type;
+    using V = typename anya::iterator_traits<ForwardIt>::value_type;
     ForwardIt current = first;
     try {
         for (; count > 0; ++current, (void)--count) {
@@ -525,7 +523,74 @@ uninitialized_fill_n(ForwardIt first, Size count, const T& value) {
     }
 }
 
+/*!
+ * @tparam ForwardIt
+ * @param first   要初始化的元素的左闭上界
+ * @param last    要初始化的元素的右开下界
+ */
+template<class ForwardIt>
+void
+uninitialized_default_construct(ForwardIt first, ForwardIt last) {
+    using Value = typename anya::iterator_traits<ForwardIt>::value_type;
+    ForwardIt current = first;
+    try {
+        for (; current != last; ++current) {
+            ::new (const_cast<void*>(static_cast<const volatile void*>(
+                std::addressof(*current)))) Value;
+        }
+    }
+    catch (...) {
+        for (; first != current; ++first) {
+            first->~Value();
+        }
+        throw;
+    }
+}
+
+/*!
+ * @tparam ForwardIt
+ * @tparam Size
+ * @param first 要初始化的元素的左闭上界
+ * @param n     要构造的元素数量
+ * @return      指向最后初始化的元素后一元素的迭代器
+ */
+template< class ForwardIt, class Size >
+ForwardIt
+uninitialized_default_construct_n(ForwardIt first, Size n) {
+    using T = typename anya::iterator_traits<ForwardIt>::value_type;
+    ForwardIt current = first;
+    try {
+        for (; n > 0; (void)++current, --n) {
+            ::new (const_cast<void*>(static_cast<const volatile void*>(
+                std::addressof(*current)))) T;
+        }
+        return current;
+    }
+    catch (...) {
+        for (; first != current; ++first) {
+            first->~T();
+        }
+        throw;
+    }
+}
+
 #pragma endregion
+
+template<typename T>
+void
+destroy_at(T* x) {
+    x->~T();
+}
+
+template<typename ForwardIt>
+void
+destroy(ForwardIt first, ForwardIt last) {
+    using V = typename std::iterator_traits<ForwardIt>::value_type;
+    if constexpr(std::is_pod<V>::value) {
+        return;
+    }
+    for (; first != last; ++first) anya::destroy_at(anya::allocator<V>().address(*first));
+}
 
 }
 

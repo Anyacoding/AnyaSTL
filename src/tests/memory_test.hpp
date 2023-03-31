@@ -58,6 +58,7 @@ TEST(MemoryTest, uninitialized_fill) {
     EXPECT_TRUE(base == anya);
 }
 
+// 对于int默认初始不做任何事情
 TEST(MemoryTest, uninitialized_fill_n) {
     std::vector<int> base(110, 6);
     std::vector<int> anya(110, 0);
@@ -65,6 +66,38 @@ TEST(MemoryTest, uninitialized_fill_n) {
     EXPECT_FALSE(base == anya);
     anya::uninitialized_fill_n(anya.begin(), anya.size(), 6);
     EXPECT_TRUE(base == anya);
+}
+
+TEST(MemoryTest, uninitialized_default_construct) {
+    std::vector<int> base(110);
+    std::vector<int> anya(110, 0);
+    anya::uninitialized_default_construct(anya.begin(), anya.end());
+    EXPECT_TRUE(base == anya);
+}
+
+TEST(MemoryTest, uninitialized_default_construct_n) {
+    std::vector<int> base(110, 7);
+    std::vector<int> anya(110, 7);
+    anya::uninitialized_default_construct_n(anya.begin(), anya.size());
+    EXPECT_TRUE(base == anya);
+}
+
+
+
+TEST(MemoryTest, destroy) {
+    struct Test {
+        int a = 10;
+        Test() = default;
+        Test(int num): a(num) {}
+        ~Test() { a = 0; }
+    };
+    std::vector<Test> base(110, 110);
+    std::vector<Test> anya(110, 7);
+    anya::destroy(anya.begin(), anya.end());
+    std::destroy(base.begin(), base.end());
+    for (int i = 0; i < base.size(); ++i) {
+        EXPECT_TRUE(base[i].a == anya[i].a);
+    }
 }
 
 
