@@ -107,11 +107,18 @@ public:
 
     constexpr explicit normal_iterator(const Iterator& it) noexcept : current(it) {}
 
-    constexpr normal_iterator& operator=(const normal_iterator&) noexcept = default;
+    // 这个约束是为了实现 pointer 能转化为 const_pointer，但反之不行
+    template<typename Iter>
+    requires std::same_as<Iter, typename Container::pointer>
+    constexpr normal_iterator(const normal_iterator<Iter, Container> it) noexcept :
+        current(const_cast<Iterator>(it.base())) {}
 
     ~normal_iterator() = default;
 
 public:
+    constexpr normal_iterator&
+    operator=(const normal_iterator&) noexcept = default;
+
     constexpr reference
     operator*() const noexcept { return *current; }
 

@@ -412,6 +412,22 @@ private:
 
 #pragma endregion
 
+template<typename T>
+void
+destroy_at(T* x) {
+    x->~T();
+}
+
+template<typename ForwardIt>
+void
+destroy(ForwardIt first, ForwardIt last) {
+    using V = typename anya::iterator_traits<ForwardIt>::value_type;
+    if constexpr(std::is_pod<V>::value) {
+        return;
+    }
+    for (; first != last; ++first) anya::destroy_at(anya::allocator<V>().address(*first));
+}
+
 
 #pragma region 未初始化内存算法
 /*!
@@ -467,6 +483,57 @@ uninitialized_copy_n(InputIt first, Size count, NoThrowForwardIt d_first) {
         }
         throw;
     }
+}
+
+/*!
+ * @tparam InputIt
+ * @tparam NoThrowForwardIt
+ * @param first    要移动的元素的左闭上界
+ * @param last     要移动的元素的右开下界
+ * @param d_first  目标范围的起始
+ * @return         指向最后移动的元素后一元素的迭代器
+ */
+template<class InputIt, class NoThrowForwardIt>
+NoThrowForwardIt
+uninitialized_move(InputIt first, InputIt last, NoThrowForwardIt d_first) {
+    using Value = typename anya::iterator_traits<NoThrowForwardIt>::value_type;
+    NoThrowForwardIt current = d_first;
+    try {
+        for (; first != last; ++first, (void) ++current) {
+            ::new (static_cast<void*>(std::addressof(*current))) Value(std::move(*first));
+        }
+        return current;
+    }
+    catch (...) {
+        anya::destroy(d_first, current);
+        throw;
+    }
+}
+
+/*!
+ * @tparam InputIt
+ * @tparam Size
+ * @tparam NoThrowForwardIt
+ * @param first    要移动的元素范围起始
+ * @param count    要移动的元素数目
+ * @param d_first  目标范围的起始
+ * @return         一对迭代器，其首元素是指向源范围中最后被移动的元素后一元素的迭代器，第二元素是指向目标范围中最后移动到的元素后一元素的迭代器
+ */
+template<class InputIt, class Size, class NoThrowForwardIt>
+std::pair<InputIt, NoThrowForwardIt>
+uninitialized_move_n(InputIt first, Size count, NoThrowForwardIt d_first) {
+    using Value = typename anya::iterator_traits<NoThrowForwardIt>::value_type;
+    NoThrowForwardIt current = d_first;
+    try {
+        for (; count > 0; ++first, (void) ++current, --count) {
+            ::new (const_cast<void*>(static_cast<const volatile void*>(
+                std::addressof(*current)))) Value(std::move(*first));
+        }
+    } catch (...) {
+        anya::destroy(d_first, current);
+        throw;
+    }
+    return {first, current};
 }
 
 /*!
@@ -575,22 +642,6 @@ uninitialized_default_construct_n(ForwardIt first, Size n) {
 }
 
 #pragma endregion
-
-template<typename T>
-void
-destroy_at(T* x) {
-    x->~T();
-}
-
-template<typename ForwardIt>
-void
-destroy(ForwardIt first, ForwardIt last) {
-    using V = typename std::iterator_traits<ForwardIt>::value_type;
-    if constexpr(std::is_pod<V>::value) {
-        return;
-    }
-    for (; first != last; ++first) anya::destroy_at(anya::allocator<V>().address(*first));
-}
 
 }
 

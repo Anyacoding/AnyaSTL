@@ -7,6 +7,8 @@
 
 #include "allocator/memory.hpp"
 #include "iterator/iterator.hpp"
+#include "algorithm/algorithm.h"
+#include <concepts>
 #include <type_traits>
 
 namespace anya {
@@ -55,11 +57,13 @@ public:
         finish = anya::uninitialized_default_construct_n(start, count);
     }
 
+    // 这里需要约束确实是迭代器类型，否则会产生歧义
     template<class InputIt>
+    requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
     constexpr vector(InputIt first, InputIt last) {
         using iterator_tag = anya::iter_category_t<InputIt>;
         if constexpr (std::is_same_v<iterator_tag, anya::input_iterator_tag>) {
-            // TODO: 待完成 emplace_back() 可补全
+            while (first != last) emplace_back(*first++);
         }
         else {
             size_t n = anya::distance(first, last);
@@ -100,7 +104,48 @@ public:
     constexpr const_iterator
     cbegin() const noexcept { return const_iterator(start); }
 
+    constexpr reverse_iterator
+    rbegin() noexcept { return reverse_iterator(end()); }
+
+    constexpr const_reverse_iterator
+    rbegin() const noexcept { return const_reverse_iterator(cend()); }
+
+    constexpr const_reverse_iterator
+    crbegin() const noexcept { return const_reverse_iterator(cend()); }
+
+    constexpr iterator
+    end() noexcept { return iterator(finish); }
+
+    constexpr const_iterator
+    end() const noexcept { return const_iterator(finish); }
+
+    constexpr const_iterator
+    cend() const noexcept { return const_iterator(finish); }
+
+    constexpr reverse_iterator
+    rend() noexcept { reverse_iterator(begin()); }
+
+    constexpr const_reverse_iterator
+    rend() const noexcept { const_reverse_iterator(cbegin()); }
+
+    constexpr const_reverse_iterator
+    crend() const noexcept { const_reverse_iterator(cbegin()); }
+
 #pragma endregion
+
+#pragma region 容量
+public:
+    [[nodiscard]] constexpr size_type
+    capacity() const noexcept { return end_of_storage - start; }
+
+    [[nodiscard]] constexpr size_type
+    size() const noexcept { return finish - start; }
+
+    [[nodiscard]] constexpr bool
+    empty() const noexcept { return start == finish; }
+
+#pragma endregion
+
 
 #pragma region 修改器
 public:
@@ -114,24 +159,16 @@ public:
     constexpr iterator
     emplace(const_iterator pos, Args&&... args) {
         size_t index = pos - cbegin();
-        // TODO: 未完成
+        prepare_to_insert(index, 1);
+        alloc.template construct(start + index, std::forward<Args>(args)...);
         return begin() + index;
     };
 
     template<class... Args>
     constexpr reference
     emplace_back(Args&&... args) {
-
+        return *emplace(end(), std::forward<Args>(args)...);
     };
-
-#pragma endregion
-
-
-#pragma region 容量
-public:
-    [[nodiscard]] constexpr size_type
-    capacity() const noexcept { return end_of_storage - start; }
-
 
 #pragma endregion
 
@@ -173,7 +210,47 @@ private:
     void
     prepare_to_insert(size_t pos, size_t n) {
         if (n == 0) return;
-        // TODO: 未完成
+        size_t new_size = this->size() + n;
+        if (new_size > capacity()) {
+            update_capacity(anya::max(new_size, dilatation(capacity())));
+        }
+        pointer insert_pos = start + pos;
+        anya::uninitialized_default_construct_n(finish, n);
+        // 从后往前挪动空出n个位置，并析构原来的元素
+        anya::move_backward(insert_pos, finish, finish + n);
+        anya::destroy(insert_pos, insert_pos + n);
+        finish += n;
+    }
+
+    // 更新容器容量
+    void
+    update_capacity(size_type new_cap) {
+        size_type old_cap = capacity();
+        if (new_cap > old_cap) {
+            auto new_start = alloc.allocate(new_cap);
+            auto new_finish = anya::uninitialized_move(start, finish, new_start);
+            anya::destroy(start, finish);
+            alloc.deallocate(start, old_cap);
+            start = new_start, finish = new_finish;
+            end_of_storage = start + new_cap;
+        }
+        // TODO: 检查正确性
+        else if (new_cap <= old_cap && new_cap >= size()) {
+            alloc.deallocate(start + new_cap, old_cap - new_cap);
+            end_of_storage = start + new_cap;
+        }
+        else if (new_cap <= old_cap && new_cap < size()) {
+            anya::destroy(start + new_cap, finish);
+            alloc.deallocate(start + new_cap, old_cap - new_cap);
+            finish = start + new_cap;
+            end_of_storage = start + new_cap;
+        }
+    }
+
+    // 扩容策略
+    constexpr static size_t
+    dilatation(size_t cur) {
+        return (size_type)(2 * cur);
     }
 
 #pragma endregion
