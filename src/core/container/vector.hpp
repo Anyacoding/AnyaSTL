@@ -93,6 +93,53 @@ public:
 
 #pragma endregion
 
+#pragma region 赋值
+    // TODO: 未完成模块
+
+#pragma endregion
+
+#pragma region 元素访问
+public:
+    constexpr reference
+    at(size_type pos) {
+        if (pos >= size())
+            throw std::out_of_range("pos out of range of the vector");
+        return start[pos];
+    };
+
+    constexpr const_reference
+    at(size_type pos) const {
+        if (pos >= size())
+            throw std::out_of_range("index out of range of the vector");
+        return start[pos];
+    }
+
+    constexpr reference
+    operator[](size_type pos) { return start[pos]; }
+
+    constexpr const_reference
+    operator[](size_type pos) const { return start[pos]; }
+
+    constexpr reference
+    front() { return *start; }
+
+    constexpr const_reference
+    front() const { return *start; }
+
+    constexpr reference
+    back() { return *(finish - 1); }
+
+    constexpr const_reference
+    back() const { return *(finish - 1); }
+
+    constexpr T*
+    data() noexcept { return start; }
+
+    constexpr const T*
+    data() const noexcept { return start; }
+
+#pragma endregion
+
 #pragma region 迭代器
 public:
     constexpr iterator
@@ -144,6 +191,23 @@ public:
     [[nodiscard]] constexpr bool
     empty() const noexcept { return start == finish; }
 
+    [[nodiscard]] constexpr size_type
+    max_size() const noexcept { return alloc.max_size(); }
+
+    constexpr void
+    reserve(size_type new_cap) {
+        if (new_cap > capacity()) {
+            update_capacity(new_cap);
+        }
+    }
+
+    constexpr void
+    shrink_to_fit() {
+        if (finish < end_of_storage) {
+            update_capacity(size());
+        }
+    }
+
 #pragma endregion
 
 
@@ -169,6 +233,57 @@ public:
     emplace_back(Args&&... args) {
         return *emplace(end(), std::forward<Args>(args)...);
     };
+
+#pragma endregion
+
+#pragma region 友元比较函数
+public:
+    bool friend
+    operator==(const anya::vector<T, Allocator>& lhs,
+               const anya::vector<T, Allocator>& rhs) {
+        if (lhs.size() != rhs.size())
+            return false;
+        if (&lhs == & rhs || lhs.start == rhs.start)
+            return true;
+        for (size_t i = 0; i < lhs.size(); ++i) {
+            if (lhs[i] != rhs[i])
+                return false;
+        }
+        return true;
+    };
+
+    bool friend
+    operator!=(const anya::vector<T, Allocator>& lhs,
+               const anya::vector<T, Allocator>& rhs) {
+        return !(lhs == rhs);
+    };
+
+    friend bool
+    operator<(const anya::vector<T, Allocator>& lhs,
+              const anya::vector<T, Allocator>& rhs) {
+        // TODO: 将来替换成 anya::lexicographical_compare()
+        return std::lexicographical_compare(
+            lhs.begin(), lhs.end(),
+            rhs.begin(), rhs.end());
+    }
+
+    friend bool
+    operator>(const anya::vector<T, Allocator>& lhs,
+              const anya::vector<T, Allocator>& rhs) {
+        return rhs < lhs;
+    }
+
+    friend bool
+    operator<=(const anya::vector<T, Allocator>& lhs,
+               const anya::vector<T, Allocator>& rhs) {
+        return !(rhs < lhs);
+    }
+
+    friend bool
+    operator>=(const anya::vector<T, Allocator>& lhs,
+               const anya::vector<T, Allocator>& rhs) {
+        return !(lhs < rhs);
+    }
 
 #pragma endregion
 

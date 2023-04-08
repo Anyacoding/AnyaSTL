@@ -399,6 +399,11 @@ public:
         p->~U();
     }
 
+    [[nodiscard]] size_type
+    max_size() const noexcept {
+        return std::numeric_limits<difference_type>::max() / sizeof(T);
+    }
+
 private:
     constexpr pointer
     address_of(const_reference x) const noexcept {
