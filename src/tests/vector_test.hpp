@@ -30,8 +30,8 @@ TEST(VecTest, construct) {
     EXPECT_EQ(mnzn.size(), anya.size());
     EXPECT_EQ(mnzn, anya);
 
-    // auto cend = anya.cend();
-    // typename anya::vector<int>::iterator end = cend;
+    anya::vector<int> MnZn = mnzn;
+    EXPECT_EQ(mnzn, MnZn);
 }
 
 TEST(VecTest, capacity) {
@@ -83,6 +83,23 @@ TEST(VecTest, compare) {
     EXPECT_FALSE(std_anya > std_mnzn);
     EXPECT_FALSE(std_anya >= std_mnzn);
     EXPECT_TRUE(std_anya != std_mnzn);
+}
+
+
+TEST(VecTest, assign) {
+    anya::vector<std::string> mnzn {"m", "n", "z", "n"};
+    anya::vector<std::string> anya;
+    anya = mnzn;
+    EXPECT_EQ(mnzn, anya);
+    anya = std::move(mnzn);
+    mnzn = {"m", "n", "z", "n"};
+    EXPECT_EQ(mnzn, anya);
+    anya.assign({"a", "n", "y", "a"});
+    mnzn.assign(anya.begin(), anya.end());
+    EXPECT_EQ(mnzn, anya);
+    anya.assign(10, "anya");
+    mnzn.assign(10, "anya");
+    EXPECT_EQ(mnzn, anya);
 }
 
 #endif //ANYA_STL_VECTOR_TEST_HPP

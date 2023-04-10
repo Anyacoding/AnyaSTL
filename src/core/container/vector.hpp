@@ -94,12 +94,57 @@ public:
 #pragma endregion
 
 #pragma region 赋值
-    // TODO: 未完成模块
+    constexpr vector&
+    operator=(const vector& other) {
+        if (this == &other)
+            return *this;
+        assign_aux(other.begin(), other.end(), other.size());
+        return *this;
+    }
+
+    constexpr vector&
+    operator=(vector&& other) noexcept {
+        if (this == &other)
+            return *this;
+        move_storage(other);
+        return *this;
+    }
+
+    constexpr vector&
+    operator=(std::initializer_list<T> ilist) {
+        assign_aux(ilist.begin(), ilist.end(), ilist.size());
+        return *this;
+    }
+
+    constexpr void
+    assign(size_type count, const T& value) {
+        destroy_storage();
+        if (count > capacity()) { // 需要扩容
+            deallocate_storage();
+            update_capacity(count);
+        }
+        finish = anya::uninitialized_fill_n(start, count, value);
+    }
+
+    // 其中有任何一个迭代器是指向 *this 中的迭代器时行为未定义
+    template<class InputIt>
+    constexpr void
+    assign(InputIt first, InputIt last) {
+        assign_aux(first, last, anya::distance(first, last));
+    }
+
+    constexpr void
+    assign(std::initializer_list<T> ilist) {
+        assign_aux(ilist.begin(), ilist.end(), ilist.size());
+    }
 
 #pragma endregion
 
 #pragma region 元素访问
 public:
+    constexpr allocator_type
+    get_allocator() const noexcept { return alloc; };
+
     constexpr reference
     at(size_type pos) {
         if (pos >= size())
@@ -288,7 +333,7 @@ public:
 #pragma endregion
 
 
-#pragma region 工具函数
+#pragma region storage
 private:
     // 开辟内存但不构造
     void
@@ -321,6 +366,10 @@ private:
         start = end_of_storage = finish = nullptr;
     }
 
+#pragma endregion
+
+
+#pragma region 工具函数
     // 插入的准备工作
     void
     prepare_to_insert(size_t pos, size_t n) {
@@ -360,6 +409,19 @@ private:
             finish = start + new_cap;
             end_of_storage = start + new_cap;
         }
+    }
+
+    // 销毁旧对象,以新对象初始化
+    template<class InputIt>
+    void
+    assign_aux(InputIt first, InputIt last, size_t n) {
+        // 析构原来的元素
+        destroy_storage();
+        if (n > capacity()) {
+            deallocate_storage();
+            alloc_storage(n);
+        }
+        finish = anya::uninitialized_copy(first, last, start);
     }
 
     // 扩容策略
