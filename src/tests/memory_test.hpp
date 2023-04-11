@@ -69,9 +69,10 @@ TEST(MemoryTest, uninitialized_fill_n) {
 }
 
 TEST(MemoryTest, uninitialized_default_construct) {
-    std::vector<int> base(110);
-    std::vector<int> anya(110, 0);
+    std::vector<int> base(110, 7);
+    std::vector<int> anya(110, 7);
     anya::uninitialized_default_construct(anya.begin(), anya.end());
+    std::uninitialized_default_construct(base.begin(), base.end());
     EXPECT_TRUE(base == anya);
 }
 
@@ -79,6 +80,7 @@ TEST(MemoryTest, uninitialized_default_construct_n) {
     std::vector<int> base(110, 7);
     std::vector<int> anya(110, 7);
     anya::uninitialized_default_construct_n(anya.begin(), anya.size());
+    std::uninitialized_default_construct_n(base.begin(), base.size());
     EXPECT_TRUE(base == anya);
 }
 

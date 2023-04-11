@@ -383,7 +383,6 @@ public:
         return address_of(x);
     };
 
-    // TODO: 针对POD进行优化
     // 构造已开辟内存的对象
     template<class U, class... Args>
     constexpr void

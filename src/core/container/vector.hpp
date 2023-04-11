@@ -372,6 +372,80 @@ public:
         return *emplace(end(), std::forward<Args>(args)...);
     };
 
+    /*!
+     * @param pos 指向要移除的元素的迭代器
+     * @return    最后移除元素之后的迭代器
+     */
+    constexpr iterator
+    erase(const_iterator pos) {
+        if (pos == end())
+            return end();
+        return erase(pos, pos + 1);
+    }
+
+    /*!
+     * @param first  移除范围 [first, last)
+     * @param last   中的元素
+     * @return       最后移除元素之后的迭代器
+     */
+    constexpr iterator
+    erase(const_iterator first, const_iterator last) {
+        if (first >= last)
+            return iterator(const_cast<pointer>(last.base()));
+        if (first == end())
+            return end();
+        // [last, end()) => [first, first + end()-last)
+        auto ret = iterator(anya::move(const_cast<pointer>(last.base()),
+                                   finish,
+                                   const_cast<pointer>(first.base())));
+        anya::destroy(ret, end());
+        finish = ret.base();
+        return iterator(const_cast<pointer>(first.base()));
+    }
+
+    constexpr void
+    push_back(const T& value) {
+        insert(end(), value);
+    }
+
+    constexpr void
+    push_back(T&& value) {
+        insert(end(), std::move(value));
+    }
+
+    constexpr void
+    pop_back() {
+        auto target = finish-- - 1;
+        alloc.template destroy(target);
+    }
+
+    constexpr void
+    resize(size_type new_size) {
+        resize(new_size, value_type());
+    }
+
+    constexpr void
+    resize(size_type new_size, const value_type& value) {
+        size_type cur_size = size();
+        if (new_size > cur_size) {
+            if (new_size > capacity()) {
+                update_capacity(anya::max(new_size, dilatation(size())));
+            }
+            finish = anya::uninitialized_fill_n(finish, new_size - cur_size, value);
+        } else {
+            anya::destroy(start + new_size, finish);
+            finish = start + new_size;
+        }
+    }
+
+    constexpr void
+    swap(vector& other) noexcept {
+        using std::swap;
+        swap(start, other.start);
+        swap(finish, other.finish);
+        swap(end_of_storage, other.end_of_storage);
+    }
+
 #pragma endregion
 
 #pragma region 友元比较函数
@@ -469,7 +543,9 @@ private:
         if (n == 0) return;
         size_t new_size = this->size() + n;
         if (new_size > capacity()) {
-            update_capacity(anya::max(new_size, dilatation(capacity())));
+            // TODO: size() 还是 capacity() ?
+            // DONE: 选择 size()
+            update_capacity(anya::max(new_size, dilatation(size())));
         }
         pointer insert_pos = start + pos;
         anya::uninitialized_default_construct_n(finish, n);
@@ -524,10 +600,20 @@ private:
     }
 
 #pragma endregion
-
 };
 
+// 特化 anya::swap 算法
+template<class T, class Alloc>
+constexpr void
+swap(anya::vector<T, Alloc>& lhs, anya::vector<T, Alloc>& rhs) noexcept {
+    lhs.swap(rhs);
 }
+
+}
+
+
+
+
 
 
 #endif //ANYA_STL_VECTOR_HPP

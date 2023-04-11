@@ -37,6 +37,8 @@ move_backward(BidirIt1 first, BidirIt1 last, BidirIt2 result_back) {
     return result_back;
 }
 
+
+
 }
 
 #endif //ANYA_STL_ALGORITHM_H

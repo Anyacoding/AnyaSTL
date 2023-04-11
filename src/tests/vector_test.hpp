@@ -150,4 +150,112 @@ TEST(VecTest, insert) {
         EXPECT_EQ(stand[i], anya[i]);
 }
 
+
+TEST(VecTest, erase) {
+    anya::vector<int> anya { 1, 1, 4, 5, 1, 4 };
+    std::vector<int>  stand { 1, 1, 4, 5, 1, 4 };
+    auto anya_it = anya.erase(anya.begin() + 2);
+    auto std_it = stand.erase(stand.begin() + 2);
+    EXPECT_EQ(anya::distance(anya.begin(), anya_it), std::distance(stand.begin(), std_it));
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+
+    anya_it = anya.erase(anya.begin() + 2, anya.end());
+    std_it = stand.erase(stand.begin() + 2, stand.end());
+    EXPECT_EQ(anya::distance(anya.begin(), anya_it), std::distance(stand.begin(), std_it));
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+}
+
+struct test {
+    ~test() { std::cout << "die" << std::endl; }
+    friend bool operator==(const test& a, const test& b) {
+        return true;
+    }
+};
+
+TEST(VecTest, push_back) {
+    anya::vector<int> anya { 1, 1, 4, 5, 1, 4 };
+    std::vector<int>  stand { 1, 1, 4, 5, 1, 4 };
+    anya.push_back(6);
+    stand.push_back(6);
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+
+    anya.pop_back();
+    stand.pop_back();
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+
+    anya::vector<test> temp1(2);
+    std::vector<test>  temp2(2);
+    temp1.pop_back();
+    temp2.pop_back();
+    EXPECT_EQ(temp1.size(), temp2.size());
+    EXPECT_EQ(temp1.capacity(), temp2.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(temp1[i], temp2[i]);
+    }
+}
+
+TEST(VecTest, resize) {
+    anya::vector<int> anya { 1, 1, 4, 5, 1, 4 };
+    std::vector<int>  stand { 1, 1, 4, 5, 1, 4 };
+    anya.resize(anya.size() + 5);
+    stand.resize(stand.size() + 5);
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+
+    anya.resize(anya.size() + 5, 6);
+    stand.resize(stand.size() + 5, 6);
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+
+    anya.resize(anya.size() + 5, 9);
+    stand.resize(stand.size() + 5, 9);
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+}
+
+TEST(VecTest, dilatation) {
+    anya::vector<int> anya { 1, 1, 4, 5, 1, 4 };
+    std::vector<int>  stand { 1, 1, 4, 5, 1, 4 };
+    anya.reserve(12);
+    stand.reserve(12);
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+
+    anya.insert(anya.end(), 12, 6);
+    stand.insert(stand.end(), 12, 6);
+    EXPECT_EQ(stand.size(), anya.size());
+    EXPECT_EQ(stand.capacity(), anya.capacity());
+    for (int i = 0; i < stand.size(); ++i) {
+        EXPECT_EQ(stand[i], anya[i]);
+    }
+}
+
 #endif //ANYA_STL_VECTOR_TEST_HPP
