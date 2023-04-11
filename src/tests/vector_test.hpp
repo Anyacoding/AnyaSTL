@@ -94,12 +94,60 @@ TEST(VecTest, assign) {
     anya = std::move(mnzn);
     mnzn = {"m", "n", "z", "n"};
     EXPECT_EQ(mnzn, anya);
+
     anya.assign({"a", "n", "y", "a"});
     mnzn.assign(anya.begin(), anya.end());
     EXPECT_EQ(mnzn, anya);
+    EXPECT_EQ(mnzn.capacity(), anya.capacity());
+    EXPECT_EQ(mnzn.empty(), anya.empty());
+
     anya.assign(10, "anya");
     mnzn.assign(10, "anya");
     EXPECT_EQ(mnzn, anya);
+
+    anya::vector<size_t> temp1;
+    temp1.assign(10, 10);
+    anya::vector<size_t> temp2;
+    temp2.assign(temp1.begin(), temp1.end());
+    EXPECT_EQ(temp1, temp2);
+    EXPECT_EQ(temp1.size(), temp2.size());
+    EXPECT_EQ(temp1.capacity(), temp2.capacity());
+}
+
+TEST(VecTest, insert) {
+    anya::vector<int> anya;
+    std::vector<int>  stand;
+    auto anya_it = anya.insert(anya.begin(), 6);
+    auto std_it = stand.insert(stand.begin(), 6);
+    EXPECT_EQ(anya::distance(anya.begin(), anya_it), std::distance(stand.begin(), std_it));
+    EXPECT_EQ(stand.size(), anya.size());
+    for (int i = 0; i < stand.size(); ++i)
+        EXPECT_EQ(stand[i], anya[i]);
+
+    int value = 9;
+    anya_it = anya.insert(anya.begin(), value);
+    std_it = stand.insert(stand.begin(), value);
+    EXPECT_EQ(anya::distance(anya.begin(), anya_it), std::distance(stand.begin(), std_it));
+    EXPECT_EQ(stand.size(), anya.size());
+    for (int i = 0; i < stand.size(); ++i)
+        EXPECT_EQ(stand[i], anya[i]);
+
+    anya_it = anya.insert(anya.begin(), 9, value);
+    std_it = stand.insert(stand.begin(), 9, value);
+
+    EXPECT_EQ(anya::distance(anya.begin(), anya_it), std::distance(stand.begin(), std_it));
+    EXPECT_EQ(stand.size(), anya.size());
+    for (int i = 0; i < stand.size(); ++i)
+        EXPECT_EQ(stand[i], anya[i]);
+
+    anya::vector temp1 = {1, 1, 4, 5, 1, 4};
+    std::vector temp2 = {1, 1, 4, 5, 1, 4};
+    anya_it = anya.insert(anya.begin(), temp1.begin(), temp1.end());
+    std_it = stand.insert(stand.begin(), temp2.begin(), temp2.end());
+    EXPECT_EQ(anya::distance(anya.begin(), anya_it), std::distance(stand.begin(), std_it));
+    EXPECT_EQ(stand.size(), anya.size());
+    for (int i = 0; i < stand.size(); ++i)
+        EXPECT_EQ(stand[i], anya[i]);
 }
 
 #endif //ANYA_STL_VECTOR_TEST_HPP

@@ -6,9 +6,7 @@
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    std::vector<int> arr;
     return RUN_ALL_TESTS();
-    return 0;
 }
 
 

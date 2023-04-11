@@ -128,9 +128,18 @@ public:
 
     // 其中有任何一个迭代器是指向 *this 中的迭代器时行为未定义
     template<class InputIt>
+    requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
     constexpr void
     assign(InputIt first, InputIt last) {
-        assign_aux(first, last, anya::distance(first, last));
+        using iterator_tag = anya::iter_category_t<InputIt>;
+        if constexpr (std::is_same_v<iterator_tag, anya::input_iterator_tag>) {
+            destroy_storage();
+            while (first != last) emplace_back(*first++);
+            shrink_to_fit();
+        }
+        else {
+            assign_aux(first, last, anya::distance(first, last));
+        }
     }
 
     constexpr void
@@ -258,6 +267,90 @@ public:
 
 #pragma region 修改器
 public:
+    constexpr void
+    clear() noexcept { destroy_storage(); }
+
+    /*!
+     * @param pos    将内容插入到它前面的迭代器。pos可以是end()迭代器
+     * @param value  要插入的元素值
+     * @return       指向被插入value的迭代器
+     */
+    constexpr iterator
+    insert(const_iterator pos, const T& value) {
+        size_t index = pos - cbegin();
+        prepare_to_insert(index, 1);
+        alloc.construct(start + index, value);
+        return begin() + index;
+    }
+
+    /*!
+     * @param pos    将内容插入到它前面的迭代器。pos可以是end()迭代器
+     * @param value  要插入的元素值
+     * @return       指向被插入value的迭代器
+     */
+    constexpr iterator
+    insert(const_iterator pos, T&& value) {
+        size_t index = pos - cbegin();
+        prepare_to_insert(index, 1);
+        alloc.construct(start + index, std::move(value));
+        return begin() + index;
+    }
+
+    /*!
+     * @param pos    将内容插入到它前面的迭代器。pos可以是end()迭代器
+     * @param count  要插入的元素个数
+     * @param value  要插入的元素值
+     * @return       指向首个被插入元素的迭代器，或者在count == 0时返回pos
+     */
+    constexpr iterator
+    insert(const_iterator pos, size_type count, const T& value) {
+        size_t index = pos - cbegin();
+        prepare_to_insert(index, count);
+        anya::uninitialized_fill_n(begin() + index, count, value);
+        return begin() + index;
+    }
+
+    /*!
+     * @tparam InputIt
+     * @param pos    将内容插入到它前面的迭代器。pos可以是end()迭代器
+     * @param first  要插入的元素范围，
+     * @param last   不能是指向调用insert所用的容器中的迭代器
+     * @return       指向首个被插入元素的迭代器，或者在 first == last 时返回 pos
+     */
+    template<class InputIt>
+    requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
+    constexpr iterator
+    insert(const_iterator pos, InputIt first, InputIt last) {
+        size_t index = pos - cbegin();
+        using iterator_tag = anya::iter_category_t<InputIt>;
+        if constexpr (std::is_same_v<iterator_tag, anya::input_iterator_tag>) {
+            vector temp(first, last);
+            size_t n = temp.size();
+            prepare_to_insert(index, n);
+            anya::uninitialized_copy(temp.begin(), temp.end(), begin() + index);
+        }
+        else {
+            size_t n = anya::distance(first, last);
+            prepare_to_insert(index, n);
+            anya::uninitialized_copy(first, last, begin() + index);
+        }
+        return begin() + index;
+    }
+
+    /*!
+     * @param pos   将内容插入到它前面的迭代器。pos 可以是 end() 迭代器
+     * @param ilist 要插入的值来源的 initializer_list
+     * @return      指向首个被插入元素的迭代器，或者在 ilist 为空时返回 pos
+     */
+    constexpr iterator
+    insert(const_iterator pos, std::initializer_list<T> ilist) {
+        size_t index = pos - cbegin();
+        prepare_to_insert(index, ilist.size());
+        anya::uninitialized_copy(ilist.begin(), ilist.end(), begin() + index);
+        return begin() + index;
+    }
+
+
     /*!
      * @tparam Args
      * @param pos   将构造新元素到其前的迭代器
