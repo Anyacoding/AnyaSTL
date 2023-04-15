@@ -18,9 +18,9 @@ template<class T,
 class vector {
 private:
     static_assert(std::is_same<typename std::remove_cv<T>::type, T>::value,
-                  "std::vector must have a non-const, non-volatile value_type");
+                  "anya::vector must have a non-const, non-volatile value_type");
     static_assert(std::is_same<typename Allocator::value_type, T>::value,
-                  "std::vector must have the same value_type as its allocator");
+                  "anya::vector must have the same value_type as its allocator");
 public:
     using value_type      = T;
     using pointer         = T*;
@@ -543,7 +543,7 @@ private:
         if (n == 0) return;
         size_t new_size = this->size() + n;
         if (new_size > capacity()) {
-            // TODO: size() 还是 capacity() ?
+            // DONE: size() 还是 capacity() ?
             // DONE: 选择 size()
             update_capacity(anya::max(new_size, dilatation(size())));
         }

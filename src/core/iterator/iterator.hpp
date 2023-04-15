@@ -243,6 +243,11 @@ public:
 
     constexpr reverse_iterator(const reverse_iterator &oth) : current(oth.current) {};
 
+    // Fixed: rbegin 向 crbegin 转换问题
+    template<typename U>
+    constexpr reverse_iterator(const reverse_iterator<U> it)
+        noexcept : current(static_cast<iterator_type>(it.base())) {}
+
 private:
     template<typename T>
     constexpr static T*
