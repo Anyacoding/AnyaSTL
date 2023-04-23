@@ -36,6 +36,7 @@ private:
     class list_iterator
         : public anya::iterator<anya::bidirectional_iterator_tag, T> {
     private:
+        friend class list;
         list_base_node* current;
     public:
         using Self     = list_iterator<Tp>;
@@ -55,12 +56,12 @@ private:
             noexcept : current(const_cast<Iterator>(other.base())) {}
 
     public:
-        T&
+        Tp&
         operator*() const noexcept {
             return reinterpret_cast<Node*>(current)->data;
         }
 
-        T*
+        Tp*
         operator->() const noexcept {
             return alloc.address(reinterpret_cast<Node*>(current)->data);
         }
@@ -130,10 +131,11 @@ public:
 private:
     using base_alloc_type = anya::allocator<list_base_node>;
     using node_alloc_type = anya::allocator<list_node<T>>;
-    list_root root{};            // 虚拟根节点资源
+
     allocator_type alloc{};      // 普通内存分配器
     base_alloc_type base_alloc;  // base节点分配器
     node_alloc_type node_alloc;  // 标准节点分配器
+    list_root root{};            // 虚拟根节点资源
 
 #pragma region 构造 && 析构
 public:
@@ -141,6 +143,7 @@ public:
 
     list(size_type count, const T& value) {
         init_end();
+        auto it = cend();
     }
 #pragma endregion
 
@@ -185,15 +188,152 @@ public:
 
 #pragma endregion
 
-#pragma region 辅助函数
+#pragma region 修改器
+public:
+    void
+    clear() noexcept { destroy_all(); };
+
+    /*!
+     * @param pos    将内容插入到它前面的迭代器。pos 可以是 end() 迭代器
+     * @param value  要插入的元素值
+     * @return       指向被插入 value 的迭代器
+     */
+    iterator
+    insert(const_iterator pos, const T& value) {
+        return insert_front(pos, make_node(value));
+    };
+
+    /*!
+     * @param pos    将内容插入到它前面的迭代器。pos 可以是 end() 迭代器
+     * @param value  要插入的元素值
+     * @return       指向被插入 value 的迭代器
+     */
+    iterator
+    insert(const_iterator pos, T&& value) {
+        return insert_front(pos, make_node(std::move(value)));
+    }
+
+    /*!
+     * @param pos    将内容插入到它前面的迭代器。pos 可以是 end() 迭代器
+     * @param count  要插入的元素个数
+     * @param value  要插入的元素值
+     * @return       指向首个被插入元素的迭代器，或者在 count == 0 时返回 pos
+     */
+    iterator
+    insert(const_iterator pos, size_type count, const T& value) {
+        if (count == 0) return pos;
+        --count;
+        --pos;
+        iterator ret = insert_back(pos, make_node(value)), cur = ret;
+        while (count--) cur = insert_back(cur, make_node(value));
+        return ret;
+    }
+
+    /*!
+     * @tparam InputIt
+     * @param pos    将内容插入到它前面的迭代器。pos 可以是 end() 迭代器
+     * @param first  要插入的元素范围，
+     * @param last   不能是指向调用 insert 所用的容器中的迭代器
+     * @return       指向首个被插入元素的迭代器，或者在 first == last 时返回 pos
+     */
+    template<class InputIt>
+    iterator
+    insert(const_iterator pos, InputIt first, InputIt last) {
+        if (first == last) return pos;
+        --pos;
+        iterator ret = insert_back(pos, make_node(*first++)), cur = ret;
+        while (first != last) cur = insert_back(cur, make_node(*first++));
+        return ret;
+    }
+
+    /*!
+     * @param pos    将内容插入到它前面的迭代器。pos 可以是 end() 迭代器
+     * @param ilist  要插入的值来源的 initializer_list
+     * @return       指向首个被插入元素的迭代器，或者在 ilist 为空时返回 pos
+     */
+    iterator
+    insert(const_iterator pos, std::initializer_list<T> ilist) {
+        return insert(pos, ilist.begin(), ilist.end());
+    }
+
+    template<class... Args>
+    iterator
+    emplace(const_iterator pos, Args&&... args) {
+        // TODO: 转发给insert
+    };
+
+
+#pragma endregion
+
+#pragma region storage
 private:
-    void init_end() {
+    // end()是不变的
+    void
+    init_end() {
         auto* node = base_alloc.allocate(1);
         root.next = root.tail = node;
         node->next = nullptr;
         node->prev = &root;
     };
 
+    // 析构并回收所有链表节点
+    void
+    destroy_all() {
+        list_base_node* cur = root.next;
+        list_base_node* next;
+        while (cur != root.tail) {
+            next = cur->next;
+            destroy_node(cur);
+            cur = next;
+        }
+        root.next = root.tail;
+    }
+
+    // 析构并回收单个链表节点
+    void
+    destroy_node(list_base_node *node) {
+        node_alloc.template destroy(reinterpret_cast<list_node<T>*>(node));
+        node_alloc.deallocate(reinterpret_cast<list_node<T>*>(node), 1);
+        --root.size;
+    }
+
+    // 创建实体结点
+    template<class... Args>
+    list_node<T>*
+    make_node(Args&&... args) {
+        list_node<T>* node = node_alloc.allocate(1);
+        alloc.template construct(alloc.address(node->data), std::forward<Args>(args)...);
+        ++root.size;
+        return node;
+    }
+
+#pragma endregion
+
+
+#pragma region 辅助函数
+private:
+    iterator
+    insert_front(const_iterator it, list_base_node *node) {
+        // pre->node->pos
+        auto* pos = it.current;
+        auto* pre = pos->prev;
+        connect(pre, node), connect(node, pos);
+        return iterator(node);
+    }
+
+    iterator
+    insert_back(const_iterator it, list_base_node *node) {
+        // pos->node->next
+        auto* pos = it.current;
+        auto* next = pos->next;
+        connect(pos, node), connect(node, next);
+        return iterator(node);
+    };
+
+    void
+    connect(list_base_node* pre, list_base_node* next) {
+        pre->next = next, next->prev = pre;
+    }
 #pragma endregion
 
 };

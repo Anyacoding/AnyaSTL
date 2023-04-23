@@ -2,6 +2,7 @@
 #include "tests/memory_test.hpp"
 #include "tests/iterator_test.hpp"
 #include "tests/vector_test.hpp"
+#include "tests/list_test.hpp"
 #include <iterator>
 
 int main(int argc, char* argv[]) {

@@ -11,7 +11,7 @@
 #include "container/vector.hpp"
 #include <list>
 
-TEST(ListTest, construct) {
+TEST(ListTest, iterator) {
 //    std::list<int> list;
 //    anya::list<int> anya;
 //    auto crend = anya.crend();
@@ -30,5 +30,17 @@ TEST(ListTest, construct) {
 //    typename std::list<int>::iterator temp1 = cbegin;
 //    typename std::list<int>::const_iterator temp2 = begin;
 }
+
+TEST(ListTest, insert) {
+    anya::list<int> anya;
+    int a = 9;
+    anya.insert(anya.begin(), a);
+    EXPECT_TRUE(*anya.begin() == a);
+    anya.insert(anya.begin(), 10);
+    EXPECT_TRUE(*anya.begin() == 10);
+
+    // TODO: 待实现构造函数后一起测试insert函数集
+}
+
 
 #endif //ANYA_STL_LIST_TEST_HPP
