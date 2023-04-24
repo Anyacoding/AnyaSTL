@@ -34,13 +34,13 @@ private:
 
     template<class Tp>
     class list_iterator
-        : public anya::iterator<anya::bidirectional_iterator_tag, T> {
+        : public anya::iterator<anya::bidirectional_iterator_tag, Tp> {
     private:
         friend class list;
         list_base_node* current;
     public:
         using Self     = list_iterator<Tp>;
-        using Node     = list_node<Tp>;
+        using Node     = list_node<T>;
         using Iterator = list_base_node*;
     public:
         list_iterator() = default;
@@ -184,8 +184,19 @@ public:
 
 #pragma endregion
 
-#pragma region 赋值
+#pragma region access
 public:
+    reference
+    front() { return *begin(); }
+
+    const_reference
+    front() const { return *cbegin(); }
+
+    reference
+    back() { return *rbegin(); }
+
+    const_reference
+    back() const { return *crbegin(); }
 
 #pragma endregion
 
@@ -233,8 +244,14 @@ public:
 
 #pragma region 容量
 public:
+    [[nodiscard]] bool
+    empty() const noexcept { return root.size == 0; }
+
     [[nodiscard]] size_type
     size() const noexcept { return root.size; };
+
+    [[nodiscard]] size_type
+    max_size() const noexcept { return alloc.max_size(); }
 
 #pragma endregion
 

@@ -107,5 +107,22 @@ TEST(ListTest, insert) {
     }
 }
 
+TEST(ListTest, capacity) {
+    anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+    EXPECT_TRUE(anya1.size() == 6);
+    anya::list<int> anya2;
+    EXPECT_TRUE(anya2.empty());
+    EXPECT_TRUE(anya1.max_size() == anya1.max_size());
+
+}
+
+TEST(ListTest, access) {
+    anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+    EXPECT_TRUE(anya1.front() == 1);
+    EXPECT_TRUE(anya1.back() == 4);
+    const anya::list<int> anya3{2, 0, 0, 1, 4, 14};
+    EXPECT_TRUE(anya3.front() == 2);
+    EXPECT_TRUE(anya3.back() == 14);
+}
 
 #endif //ANYA_STL_LIST_TEST_HPP

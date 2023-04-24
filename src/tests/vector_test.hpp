@@ -256,6 +256,7 @@ TEST(VecTest, dilatation) {
     for (int i = 0; i < stand.size(); ++i) {
         EXPECT_EQ(stand[i], anya[i]);
     }
+
 }
 
 #endif //ANYA_STL_VECTOR_TEST_HPP
