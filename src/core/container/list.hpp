@@ -144,7 +144,49 @@ public:
     list(size_type count, const T& value) {
         init_end();
         auto it = cend();
+        while (count--) emplace(it, value);
     }
+
+    explicit list(size_type count) {
+        init_end();
+        auto it = cend();
+        while (count--) emplace(it);
+    }
+
+    template<class InputIt>
+    requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
+    list(InputIt first, InputIt last) {
+        init_end();
+        auto it = cend();
+        insert(it, first, last);
+    }
+
+    list(const list& other) {
+        init_end();
+        auto it = cend();
+        insert(it, other.begin(), other.end());
+    }
+
+    list(list&& other) {
+        move_storage(other);
+    }
+
+    list(std::initializer_list<T> init) {
+        init_end();
+        auto it = cend();
+        insert(it, init);
+    }
+
+    ~list() {
+        destroy_all();
+        base_alloc.deallocate(root.tail, 1);
+    }
+
+#pragma endregion
+
+#pragma region 赋值
+public:
+
 #pragma endregion
 
 
@@ -188,6 +230,15 @@ public:
 
 #pragma endregion
 
+
+#pragma region 容量
+public:
+    [[nodiscard]] size_type
+    size() const noexcept { return root.size; };
+
+#pragma endregion
+
+
 #pragma region 修改器
 public:
     void
@@ -221,7 +272,7 @@ public:
      */
     iterator
     insert(const_iterator pos, size_type count, const T& value) {
-        if (count == 0) return pos;
+        if (count == 0) return iterator(pos.current);
         --count;
         --pos;
         iterator ret = insert_back(pos, make_node(value)), cur = ret;
@@ -237,9 +288,10 @@ public:
      * @return       指向首个被插入元素的迭代器，或者在 first == last 时返回 pos
      */
     template<class InputIt>
+    requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
     iterator
     insert(const_iterator pos, InputIt first, InputIt last) {
-        if (first == last) return pos;
+        if (first == last) return iterator(pos.current);
         --pos;
         iterator ret = insert_back(pos, make_node(*first++)), cur = ret;
         while (first != last) cur = insert_back(cur, make_node(*first++));
@@ -253,15 +305,40 @@ public:
      */
     iterator
     insert(const_iterator pos, std::initializer_list<T> ilist) {
-        return insert(pos, ilist.begin(), ilist.end());
+        auto first = ilist.begin(), last = ilist.end();
+        if (first == last) return iterator(pos.current);
+        --pos;
+        iterator ret = insert_back(pos, make_node(*first++)), cur = ret;
+        while (first != last) cur = insert_back(cur, make_node(*first++));
+        return ret;
     }
 
     template<class... Args>
     iterator
     emplace(const_iterator pos, Args&&... args) {
-        // TODO: 转发给insert
+        return insert_front(pos, make_node(std::forward<Args>(args)...));
     };
 
+
+#pragma endregion
+
+
+#pragma region 友元比较函数
+public:
+    friend bool
+    operator==(const anya::list<T, Allocator>& lhs,
+               const anya::list<T, Allocator>& rhs) {
+        if (lhs.size() != rhs.size())
+            return false;
+        if (&lhs == &rhs || lhs.begin() == rhs.begin())
+            return true;
+        for (auto lit = lhs.begin(), rit = rhs.begin();
+             lit != lhs.end(); ++lit, ++rit) {
+            if (*lit != *rit)
+                return false;
+        }
+        return true;
+    }
 
 #pragma endregion
 
@@ -305,6 +382,11 @@ private:
         alloc.template construct(alloc.address(node->data), std::forward<Args>(args)...);
         ++root.size;
         return node;
+    }
+
+    // 移动对象
+    void move_storage(list& other) {
+        root = other.root, other.root = {}, other.init_end();
     }
 
 #pragma endregion

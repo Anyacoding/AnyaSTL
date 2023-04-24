@@ -11,6 +11,43 @@
 #include "container/vector.hpp"
 #include <list>
 
+TEST(ListTest, construct) {
+    {
+        anya::list<int> anya(1, 6);
+        EXPECT_TRUE(*anya.begin() == *anya.rbegin());
+    }
+
+    {
+        anya::list<int> anya1(6, 0);
+        anya::list<int> anya2(6);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1(6, 6);
+        anya::list<int> anya2(anya1.begin(), anya1.end());
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1(5, 6);
+        anya::list<int> anya2 = anya1;
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1(7, 6);
+        anya::list<int> anya2 = std::move(anya1);
+        EXPECT_FALSE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1(4, 6);
+        anya::list<int> anya2 = {6, 6, 6, 6};
+        EXPECT_TRUE(anya1 == anya2);
+    }
+}
+
 TEST(ListTest, iterator) {
 //    std::list<int> list;
 //    anya::list<int> anya;
@@ -32,14 +69,42 @@ TEST(ListTest, iterator) {
 }
 
 TEST(ListTest, insert) {
-    anya::list<int> anya;
-    int a = 9;
-    anya.insert(anya.begin(), a);
-    EXPECT_TRUE(*anya.begin() == a);
-    anya.insert(anya.begin(), 10);
-    EXPECT_TRUE(*anya.begin() == 10);
+    {
+        anya::list<int> anya;
+        int a = 9;
+        anya.insert(anya.begin(), a);
+        EXPECT_TRUE(*anya.begin() == a);
+        anya.insert(anya.begin(), 10);
+        EXPECT_TRUE(*anya.begin() == 10);
+    }
 
-    // TODO: 待实现构造函数后一起测试insert函数集
+    {
+        anya::list<int> anya1(6, 6);
+        anya::list<int> anya2;
+        anya2.insert(anya2.begin(), 6, 6);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1(6, 6);
+        anya::list<int> anya2;
+        anya2.insert(anya2.begin(), anya1.begin(), anya1.end());
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2;
+        anya2.insert(anya2.begin(), {1, 1, 4, 5, 1, 4});
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2;
+        anya1.clear();
+        EXPECT_TRUE(anya1 == anya2);
+    }
 }
 
 
