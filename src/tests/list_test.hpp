@@ -56,8 +56,7 @@ TEST(ListTest, iterator) {
 //    typename anya::list<int>::reverse_iterator temp1 = crend;
 //    typename anya::list<int>::const_reverse_iterator temp2 = rend;
 
-//    std::vector<int> list;
-//    anya::vector<int> anya;
+
 //    auto crbegin = anya.crbegin();
 //    auto rbegin = anya.rbegin();
 //    typename anya::vector<int>::reverse_iterator temp1 = crbegin;

@@ -559,23 +559,12 @@ private:
     void
     update_capacity(size_type new_cap) {
         size_type old_cap = capacity();
-        if (new_cap > old_cap) {
+        if (new_cap != old_cap) {
             auto new_start = alloc.allocate(new_cap);
             auto new_finish = anya::uninitialized_move(start, finish, new_start);
             anya::destroy(start, finish);
             alloc.deallocate(start, old_cap);
             start = new_start, finish = new_finish;
-            end_of_storage = start + new_cap;
-        }
-        // TODO: 检查正确性
-        else if (new_cap <= old_cap && new_cap >= size()) {
-            alloc.deallocate(start + new_cap, old_cap - new_cap);
-            end_of_storage = start + new_cap;
-        }
-        else if (new_cap <= old_cap && new_cap < size()) {
-            anya::destroy(start + new_cap, finish);
-            alloc.deallocate(start + new_cap, old_cap - new_cap);
-            finish = start + new_cap;
             end_of_storage = start + new_cap;
         }
     }
