@@ -411,6 +411,72 @@ public:
         return iterator(end);
     }
 
+    template<class... Args>
+    reference
+    emplace_back(Args&&... args) {
+        return *emplace(cend(), std::forward<Args>(args)...);
+    }
+
+    template<class... Args>
+    reference
+    emplace_front(Args&&... args) {
+        return *emplace(cbegin(), std::forward<Args>(args)...);
+    }
+
+    void
+    push_back(const T& value) {
+        emplace_back(value);
+    }
+
+    void
+    push_back(T&& value) {
+        emplace_back(std::move(value));
+    }
+
+    void
+    push_front(const T& value) {
+        emplace_front(value);
+    }
+
+    void
+    push_front(T&& value) {
+        emplace_front(std::move(value));
+    }
+
+    void
+    pop_back() {
+        erase(--cend());
+    }
+
+    void
+    pop_front() {
+        erase(cbegin());
+    }
+
+    void
+    resize(size_type count) {
+        resize(count, value_type());
+    }
+
+    void
+    resize(size_type count, const value_type& value) {
+        size_t size = this->size();
+        if (count > size) {
+            insert(cend(), count - size, value);
+        }
+        else {
+            auto it = count < size / 2
+                          ? anya::next(begin(), difference_type(count))
+                          : anya::prev(end(), difference_type(size - count));
+            erase(it, cend());
+        }
+    }
+
+    void
+    swap(list& other) noexcept {
+        std::swap(root, other.root);
+    }
+
 #pragma endregion
 
 

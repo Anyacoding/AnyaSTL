@@ -104,6 +104,74 @@ TEST(ListTest, insert) {
         anya1.clear();
         EXPECT_TRUE(anya1 == anya2);
     }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2;
+        anya2.emplace_back(1);
+        anya2.emplace_back(1);
+        anya2.emplace_back(4);
+        anya2.emplace_back(5);
+        anya2.emplace_back(1);
+        anya2.emplace_back(4);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2;
+        anya2.emplace_front(4);
+        anya2.emplace_front(1);
+        anya2.emplace_front(5);
+        anya2.emplace_front(4);
+        anya2.emplace_front(1);
+        anya2.emplace_front(1);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2;
+        anya2.push_back(1);
+        anya2.push_back(1);
+        anya2.push_back(4);
+        anya2.push_back(5);
+        anya2.push_back(1);
+        anya2.push_back(4);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2;
+        anya2.push_front(4);
+        anya2.push_front(1);
+        anya2.push_front(5);
+        anya2.push_front(4);
+        anya2.push_front(1);
+        anya2.push_front(1);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2{1, 4, 5, 1, 4};
+        anya1.pop_front();
+        EXPECT_TRUE(anya1 == anya2);
+        anya1.pop_front();
+        anya2.pop_front();
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2{1, 1, 4, 5, 1};
+        anya1.pop_back();
+        EXPECT_TRUE(anya1 == anya2);
+        anya1.pop_back();
+        anya2.pop_back();
+        EXPECT_TRUE(anya1 == anya2);
+    }
 }
 
 TEST(ListTest, capacity) {
@@ -161,6 +229,25 @@ TEST(ListTest, erase) {
     EXPECT_TRUE(anya2 == anya1);
     anya1.erase(anya1.begin());
     anya2.erase(anya2.begin());
+    EXPECT_TRUE(anya2 == anya1);
+}
+
+TEST(ListTest, resize) {
+    anya::list<int> anya1{1, 1, 4, 5, 1, 4, 0, 0, 0};
+    anya::list<int> anya2{1, 1, 4, 5, 1, 4};
+    anya2.resize(anya2.size() + 3);
+    EXPECT_TRUE(anya2 == anya1);
+    anya1.resize(anya1.size() + 3, 6);
+    anya2.resize(anya2.size() + 3, 6);
+    EXPECT_TRUE(anya2 == anya1);
+}
+
+TEST(ListTest, swap) {
+    anya::list<int> anya1{1, 1, 4, 5, 1, 4, 0, 0, 0};
+    anya::list<int> anya2{1, 1, 4, 5, 1, 4};
+    anya::list<int> anya3{1, 1, 4, 5, 1, 4, 0, 0, 0};
+    EXPECT_TRUE(anya2 != anya1);
+    anya2.swap(anya3);
     EXPECT_TRUE(anya2 == anya1);
 }
 

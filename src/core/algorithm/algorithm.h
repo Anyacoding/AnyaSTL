@@ -9,7 +9,7 @@
 
 namespace anya {
 
-// 最小/最大操作
+#pragma region 最小/最大操作
 template<typename T>
 constexpr T min(const T &a, const T &b) {
     return a < b ? a : b;
@@ -19,8 +19,10 @@ template<typename T>
 constexpr T max(const T &a, const T &b) {
     return a < b ? b : a;
 }
+#pragma endregion
 
-// 修改序列的操作
+
+#pragma region 修改序列的操作
 template<class InputIt, class OutputIt>
 constexpr OutputIt
 move(InputIt first, InputIt last, OutputIt d_first) {
@@ -36,6 +38,7 @@ move_backward(BidirIt1 first, BidirIt1 last, BidirIt2 result_back) {
     while (first != last) *(--result_back) = std::move(*(--last));
     return result_back;
 }
+#pragma endregion
 
 
 

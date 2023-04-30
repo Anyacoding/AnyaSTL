@@ -437,6 +437,21 @@ distance(InputIt first, InputIt last) {
     return distance_aux(first, last, iter_category_t<InputIt>());
 }
 
+
+template<class InputIt>
+constexpr InputIt
+next(InputIt it, iter_difference_t<InputIt> n = 1) {
+    advance(it, n);
+    return it;
+}
+
+template<class BidirIt>
+constexpr BidirIt
+prev(BidirIt it, iter_difference_t<BidirIt> n = 1) {
+    advance(it, -n);
+    return it;
+}
+
 #pragma endregion
 
 }
