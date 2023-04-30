@@ -124,4 +124,44 @@ TEST(ListTest, access) {
     EXPECT_TRUE(anya3.back() == 14);
 }
 
+TEST(ListTest, assign) {
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2;
+        anya2 = anya1;
+        EXPECT_TRUE(anya2 == anya1);
+        anya2 = std::move(anya1);
+        EXPECT_TRUE(anya2 != anya1);
+        anya1 = {1, 1, 4, 5, 1, 4};
+        EXPECT_TRUE(anya2 == anya1);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2;
+        anya2.assign(6, 6);
+        EXPECT_TRUE(anya2 != anya1);
+        EXPECT_TRUE(anya2 == (anya::list<int>{6, 6, 6, 6, 6, 6}));
+        anya1.assign(anya2.begin(), anya2.end());
+        EXPECT_TRUE(anya2 == anya1);
+        anya1.assign({1, 1, 4, 5, 1, 4});
+        anya2.assign({1, 1, 4, 5, 1, 4});
+        EXPECT_TRUE(anya2 == anya1);
+    }
+}
+
+TEST(ListTest, erase) {
+    anya::list<int> anya1{1, 1, 4, 5, 1, 4};
+    anya::list<int> anya2;
+    anya1.erase(anya1.begin(), anya1.end());
+    EXPECT_TRUE(anya2 == anya1);
+    anya2 = {1, 4, 5, 1, 4};
+    anya1 = {1, 1, 4, 5, 1, 4};
+    anya1.erase(anya1.begin());
+    EXPECT_TRUE(anya2 == anya1);
+    anya1.erase(anya1.begin());
+    anya2.erase(anya2.begin());
+    EXPECT_TRUE(anya2 == anya1);
+}
+
 #endif //ANYA_STL_LIST_TEST_HPP

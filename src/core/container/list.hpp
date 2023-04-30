@@ -181,10 +181,52 @@ public:
         destroy_all();
         base_alloc.deallocate(root.tail, 1);
     }
+#pragma endregion
+
+
+#pragma region 赋值
+public:
+    list&
+    operator=(const list& other) {
+        if (&other == this) return *this;
+        assign_copy(other.begin(), other.end());
+        return *this;
+    }
+
+    list&
+    operator=(list&& other) noexcept {
+        if (&other == this) return *this;
+        move_storage(other);
+        return *this;
+    }
+
+    list&
+    operator=(std::initializer_list<T> ilist) {
+        assign_copy(ilist.begin(), ilist.end());
+        return *this;
+    }
+
+    void
+    assign(size_type count, const T& value) {
+        assign_fill(count, value);
+    }
+
+    template<class InputIt>
+    requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
+    void
+    assign(InputIt first, InputIt last) {
+        assign_copy(first, last);
+    }
+
+    void
+    assign(std::initializer_list<T> ilist) {
+        assign_copy(ilist.begin(), ilist.end());
+    }
 
 #pragma endregion
 
-#pragma region access
+
+#pragma region 访问
 public:
     reference
     front() { return *begin(); }
@@ -336,6 +378,38 @@ public:
         return insert_front(pos, make_node(std::forward<Args>(args)...));
     };
 
+    /*!
+     * @param pos  指向要移除的元素的迭代器
+     * @return     最后移除元素之后的迭代器
+     */
+    iterator
+    erase(const_iterator pos) {
+        list_base_node* cur = pos.current;
+        list_base_node* pre = cur->prev;
+        list_base_node* next = cur->next;
+        pre->next = next, next->prev = pre;
+        destroy_node(cur);
+        return iterator(next);
+    }
+
+    /*!
+     * @param first  要移除的元素范围
+     * @param last   要移除的元素范围
+     * @return       最后移除元素之后的迭代器
+     */
+    iterator
+    erase(const_iterator first, const_iterator last) {
+        if (first == last) return iterator(last.current);
+        list_base_node* pre = first.current->prev;
+        list_base_node* end = last.current;
+        for (list_base_node* cur = pre->next, *temp; cur != end; ) {
+            temp = cur->next;
+            destroy_node(cur);
+            cur = temp;
+        }
+        pre->next = end, end->prev = pre;
+        return iterator(end);
+    }
 
 #pragma endregion
 
@@ -433,6 +507,34 @@ private:
     connect(list_base_node* pre, list_base_node* next) {
         pre->next = next, next->prev = pre;
     }
+
+    // 拷贝赋值
+    template<typename InputIt>
+    void
+    assign_copy(InputIt first, InputIt last) {
+        iterator cur = this->begin(), end = this->end();
+        while (first != last && cur != end) {
+            *cur++ = *first++;
+        }
+        while (first != last) {
+            emplace(end, *first++);
+        }
+        erase(cur, end);
+    }
+
+    // 拷贝填充
+    void
+    assign_fill(size_type count, const T& value) {
+        iterator cur = this->begin(), end = this->end();
+        while (cur != end && count--) {
+            *cur++ = value;
+        }
+        while (count--) {
+            emplace(end, value);
+        }
+        erase(cur, end);
+    }
+
 #pragma endregion
 
 };
