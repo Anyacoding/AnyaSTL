@@ -465,10 +465,7 @@ public:
             insert(cend(), count - size, value);
         }
         else {
-            auto it = count < size / 2
-                          ? anya::next(begin(), difference_type(count))
-                          : anya::prev(end(), difference_type(size - count));
-            erase(it, cend());
+            erase(at(count), cend());
         }
     }
 
@@ -479,6 +476,173 @@ public:
 
 #pragma endregion
 
+
+#pragma region 操作
+public:
+    void
+    merge(list& other) {
+        merge(std::move(other));
+    }
+
+    void
+    merge(list&& other) {
+        merge(std::move(other), std::less<>());
+    }
+
+    template <class Compare>
+    void
+    merge(list& other, Compare comp) {
+        merge(std::move(other), comp);
+    }
+
+    template <class Compare>
+    void
+    merge(list&& other, Compare comp) {
+        if (this->begin() == other.begin())
+            return;
+        iterator insert_it = this->begin(), insert_end = this->end();
+        iterator input_it = other.begin(), input_end = other.end();
+        while (input_it != input_end) {
+            // 保证*this的稳定性，<= 的元素都保持不变
+            if (insert_it != insert_end && comp(*insert_it, *input_it)) {
+                ++insert_it;
+            }
+            else if (insert_it != insert_end && *insert_it == *input_it) {
+                ++insert_it;
+            }
+            else {
+                insert_it = insert_front(insert_it, (input_it++).current);
+            }
+        }
+        other.root.next = other.root.tail;
+        this->root.size += other.root.size;
+        other.root.size = 0;
+    }
+
+    void
+    splice(const_iterator pos, list& other) {
+        splice(pos, std::move(other), other.cbegin(), other.cend());
+    }
+
+    void
+    splice(const_iterator pos, list&& other) {
+        splice(pos, std::move(other), other.cbegin(), other.cend());
+    }
+
+    void
+    splice(const_iterator pos, list& other, const_iterator it) {
+        splice(pos, std::move(other), it, other.cend());
+    }
+
+    void
+    splice(const_iterator pos, list&& other, const_iterator it) {
+        splice(pos, std::move(other), it, other.cend());
+    }
+
+    void
+    splice(const_iterator pos, list& other,
+           const_iterator first, const_iterator last) {
+        splice(pos, std::move(other), first, last);
+    }
+
+    void
+    splice(const_iterator pos, list&& other,
+           const_iterator first, const_iterator last) {
+        if (first == last) return;
+        size_t len = anya::distance(first, last);
+        other.root.size -= len;
+        list_base_node* pre = first.current->prev;
+        list_base_node* next = last.current;
+        // 缝合other链表
+        connect(pre, next);
+        insert(pos, first, last);
+    }
+
+    size_type
+    remove(const T& value) {
+        size_type ret = 0;
+        for (auto it = begin(); it != end(); ) {
+            if (*it == value) it = erase(it), ++ret;
+            else ++it;
+        }
+        return ret;
+    }
+
+    template<class UnaryPredicate>
+    size_type
+    remove_if(UnaryPredicate p) {
+        size_type ret = 0;
+        for (auto it = begin(); it != end(); ) {
+            if (p(*it)) it = erase(it), ++ret;
+            else ++it;
+        }
+        return ret;
+    }
+
+    void
+    reverse() noexcept {
+        if (size() <= 1) return;
+        list_base_node* cur = root.next, *next, *temp;
+        root.next = root.tail;
+        while (cur != root.tail) {
+            temp = cur->next, next = root.next;
+            connect(&root, cur);
+            connect(cur, next);
+            cur = temp;
+        }
+    }
+
+    size_type
+    unique() {
+        if (size() <= 1) return 0;
+        size_t ret = 0;
+        for (auto it = begin(), end = this->end(), next = anya::next(it); next != end; ) {
+            if (*it == *next) {
+                next = erase(next), ++ret;
+            }
+            else {
+                it = next;
+                next = anya::next(it);
+            }
+        }
+        return ret;
+    }
+
+    template<class BinaryPredicate>
+    size_type
+    unique(BinaryPredicate p) {
+        if (size() <= 1) return 0;
+        size_t ret = 0;
+        for (auto it = begin(), end = this->end(), next = anya::next(it); next != end; ) {
+            if (p(*it, *next)) {
+                next = erase(next), ++ret;
+            }
+            else {
+                it = next;
+                next = anya::next(it);
+            }
+        }
+        return ret;
+    }
+
+    void
+    sort() {
+        sort(std::less<>());
+    }
+
+    // 归并排序
+    template<class Compare>
+    void
+    sort(Compare comp) {
+        if (size() <= 1) return;
+        list half;
+        half.splice(half.cend(), *this, at(size() / 2), end());
+        this->sort(comp);
+        half.sort(comp);
+        this->merge(half, comp);
+    }
+
+#pragma endregion
 
 #pragma region 友元比较函数
 public:
@@ -599,6 +763,14 @@ private:
             emplace(end, value);
         }
         erase(cur, end);
+    }
+
+    // 获取第i个元素的迭代器
+    iterator
+    at(size_type i) {
+        return i < size() / 2
+               ? anya::next(begin(), difference_type(i))
+               : anya::prev(end(), difference_type(size() - i));
     }
 
 #pragma endregion

@@ -251,4 +251,108 @@ TEST(ListTest, swap) {
     EXPECT_TRUE(anya2 == anya1);
 }
 
+TEST(ListTest, merge) {
+    {
+        anya::list<int> anya1{0, 0, 0, 1, 1, 4, 5, 1, 4};
+        anya::list<int> anya2{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya3{0, 0, 0};
+        anya2.merge(anya3);
+        EXPECT_TRUE(anya2 == anya1);
+    }
+
+    {
+        anya::list<int> anya1{1, 1, 4, 5, 1, 4, 0, 0, 0};
+        anya::list<int> anya2{1, 1, 4, 5, 1, 4};
+        anya::list<int> anya3{0, 0, 0};
+
+        anya2.merge(anya3, std::greater<>());
+        EXPECT_TRUE(anya2 == anya1);
+    }
+}
+
+TEST(ListTest, splice) {
+    {
+        anya::list<int> anya1{1, 2, 3, 4, 5};
+        anya::list<int> anya2{10, 20, 30, 40, 50};
+
+        auto it = anya1.begin();
+        anya::advance(it, 2);
+
+        anya1.splice(it, anya2);
+        EXPECT_TRUE(anya2 == anya::list<int>());
+        EXPECT_TRUE(anya1 == (anya::list<int>{1, 2, 10, 20, 30, 40, 50, 3, 4, 5}));
+
+        anya2.splice(anya2.begin(), anya1, it, anya1.end());
+        EXPECT_TRUE(anya2 == (anya::list<int>{3, 4, 5}));
+        EXPECT_TRUE(anya1 == (anya::list<int>{1, 2, 10, 20, 30, 40, 50}));
+    }
+
+    {
+        anya::list<int> anya1{1, 2, 3, 4, 5};
+        anya::list<int> anya2{10, 20, 30, 40, 50};
+
+        auto it = anya1.begin();
+        anya::advance(it, 2);
+
+        anya1.splice(it, anya2);
+        EXPECT_TRUE(anya2 == anya::list<int>());
+        EXPECT_TRUE(anya1 == (anya::list<int>{1, 2, 10, 20, 30, 40, 50, 3, 4, 5}));
+
+        anya2.splice(anya2.begin(), anya1, it);
+        EXPECT_TRUE(anya2 == (anya::list<int>{3, 4, 5}));
+        EXPECT_TRUE(anya1 == (anya::list<int>{1, 2, 10, 20, 30, 40, 50}));
+    }
+}
+
+TEST(ListTest, remove) {
+    anya::list<int> anya = { 1,100,2,3,10,1,11,-1,12 };
+    auto ret = anya.remove(1);
+    EXPECT_TRUE(ret == 2);
+    ret = anya.remove_if([](int n) { return n > 10; });
+    EXPECT_TRUE(ret == 3);
+    EXPECT_TRUE(anya == (anya::list<int>{2, 3, 10, -1}));
+}
+
+TEST(ListTest, reverse) {
+    anya::list<int> anya{10, 20, 30, 40, 50};
+    anya.reverse();
+    EXPECT_TRUE(anya == (anya::list<int>{50, 40, 30, 20, 10}));
+}
+
+TEST(ListTest, unique) {
+    {
+        anya::list<int> anya{ 1, 2, 2, 3, 3, 2, 1, 1, 2 };
+        anya.unique();
+        EXPECT_TRUE(anya == (anya::list<int>{ 1, 2, 3, 2, 1, 2 }));
+
+        anya = { 1, 2, 12, 23, 3, 2, 51, 1, 2 };
+        anya.unique([mod = 10](int x, int y) { return (x % mod) == (y % mod); });
+
+        EXPECT_TRUE(anya == (anya::list<int>{ 1, 2, 23, 2, 51, 2 }));
+    }
+
+    {
+        anya::list<int> anya{ 1, 2, 2, 2, 3, 3, 3, 1, 1 };
+        anya.unique();
+        std::list<int> std{ 1, 2, 2, 2, 3, 3, 3, 1, 1 };
+        std.unique();
+
+        auto anya_it = anya.begin();
+        auto std_it = std.begin();
+        while (anya_it != anya.end()) {
+            EXPECT_TRUE(*anya_it == *std_it);
+            ++anya_it;
+            ++std_it;
+        }
+    }
+}
+
+TEST(ListTest, sort) {
+    anya::list<int> anya{8, 7, 5, 9, 0, 1, 3, 2, 6, 4};
+    anya.sort();
+    EXPECT_TRUE(anya == (anya::list<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+    anya.sort(std::greater<>());
+    EXPECT_TRUE(anya == (anya::list<int>{9, 8, 7, 6, 5, 4, 3, 2, 1, 0}));
+}
+
 #endif //ANYA_STL_LIST_TEST_HPP
