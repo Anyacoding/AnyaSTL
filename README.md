@@ -93,18 +93,7 @@
 命名空间：Anya
 
 ## 测试
-<div style="text-align: center; width: 500px; border: green solid 1px;">
-<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl1.png" width="600" style="margin: 0 auto;">
-</div>
-
-<div style="text-align: center; width: 500px; border: green solid 1px;">
-<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl2.png" width="600" style="margin: 0 auto;">
-</div>
-
-<div style="text-align: center; width: 500px; border: green solid 1px;">
-<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl3.png" width="600" style="margin: 0 auto;">
-</div>
-
-<div style="text-align: center; width: 500px; border: green solid 1px;">
-<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl4.png" width="600" style="margin: 0 auto;">
-</div>
+<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl1.png" width="800" style="margin: 0 auto;">
+<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl2.png" width="800" style="margin: 0 auto;">
+<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl3.png" width="800" style="margin: 0 auto;">
+<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl4.png" width="800" style="margin: 0 auto;">
