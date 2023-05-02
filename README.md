@@ -93,7 +93,7 @@
 命名空间：Anya
 
 ## 测试
-<img src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl1.png" width="600">
-<img src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl2.png" width="600">
-<img src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl3.png" width="600">
-<img src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl4.png" width="600">
+<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl1.png" width="600" style="margin: 0 auto;">
+<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl2.png" width="600" style="margin: 0 auto;">
+<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl3.png" width="600" style="margin: 0 auto;">
+<img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl4.png" width="600" style="margin: 0 auto;">
