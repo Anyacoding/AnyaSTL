@@ -243,12 +243,24 @@ TEST(ListTest, resize) {
 }
 
 TEST(ListTest, swap) {
-    anya::list<int> anya1{1, 1, 4, 5, 1, 4, 0, 0, 0};
-    anya::list<int> anya2{1, 1, 4, 5, 1, 4};
-    anya::list<int> anya3{1, 1, 4, 5, 1, 4, 0, 0, 0};
-    EXPECT_TRUE(anya2 != anya1);
-    anya2.swap(anya3);
-    EXPECT_TRUE(anya2 == anya1);
+    {
+        anya::list<int> anya1{ 1, 1, 4, 5, 1, 4, 0, 0, 0 };
+        anya::list<int> anya2{ 1, 1, 4, 5, 1, 4 };
+        anya::list<int> anya3{ 1, 1, 4, 5, 1, 4, 0, 0, 0 };
+        EXPECT_TRUE(anya2 != anya1);
+        anya2.swap(anya3);
+        EXPECT_TRUE(anya2 == anya1);
+    }
+
+    {
+        using std::swap;
+        anya::list<int> anya1{ 1, 1, 4, 5, 1, 4, 0, 0, 0 };
+        anya::list<int> anya2{ 1, 1, 4, 5, 1, 4 };
+        anya::list<int> anya3{ 1, 1, 4, 5, 1, 4, 0, 0, 0 };
+        EXPECT_TRUE(anya2 != anya1);
+        swap(anya2, anya3);
+        EXPECT_TRUE(anya2 == anya1);
+    }
 }
 
 TEST(ListTest, merge) {
@@ -353,6 +365,23 @@ TEST(ListTest, sort) {
     EXPECT_TRUE(anya == (anya::list<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
     anya.sort(std::greater<>());
     EXPECT_TRUE(anya == (anya::list<int>{9, 8, 7, 6, 5, 4, 3, 2, 1, 0}));
+}
+
+TEST(ListTest, compare) {
+    anya::list<std::string> mnzn {"m", "n", "z", "n"};
+    anya::list<std::string> anya {"a", "n", "y", "a"};
+    EXPECT_TRUE(anya < mnzn);
+    EXPECT_TRUE(anya <= mnzn);
+    EXPECT_FALSE(anya > mnzn);
+    EXPECT_FALSE(anya >= mnzn);
+    EXPECT_TRUE(anya != mnzn);
+    std::list<std::string> std_mnzn {"m", "n", "z", "n"};
+    std::list<std::string> std_anya {"a", "n", "y", "a"};
+    EXPECT_TRUE(std_anya < std_mnzn);
+    EXPECT_TRUE(std_anya <= std_mnzn);
+    EXPECT_FALSE(std_anya > std_mnzn);
+    EXPECT_FALSE(std_anya >= std_mnzn);
+    EXPECT_TRUE(std_anya != std_mnzn);
 }
 
 #endif //ANYA_STL_LIST_TEST_HPP

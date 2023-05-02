@@ -661,6 +661,39 @@ public:
         return true;
     }
 
+    friend bool
+    operator!=(const anya::list<T, Allocator>& lhs,
+               const anya::list<T, Allocator>& rhs) {
+        return !(lhs == rhs);
+    }
+
+    friend bool
+    operator<(const anya::list<T, Allocator>& lhs,
+               const anya::list<T, Allocator>& rhs) {
+        // TODO: 将来替换成 anya::lexicographical_compare()
+        return std::lexicographical_compare(
+            lhs.begin(), lhs.end(),
+            rhs.begin(), rhs.end());
+    }
+
+    friend bool
+    operator>(const anya::list<T, Allocator>& lhs,
+              const anya::list<T, Allocator>& rhs) {
+        return rhs < lhs;
+    }
+
+    friend bool
+    operator<=(const anya::list<T, Allocator>& lhs,
+              const anya::list<T, Allocator>& rhs) {
+        return !(rhs < lhs);
+    }
+
+    friend bool
+    operator>=(const anya::list<T, Allocator>& lhs,
+              const anya::list<T, Allocator>& rhs) {
+        return !(lhs < rhs);
+    }
+
 #pragma endregion
 
 #pragma region storage
@@ -774,8 +807,14 @@ private:
     }
 
 #pragma endregion
-
 };
+
+// 特化 anya::swap 算法
+template<class T, class Alloc>
+constexpr void
+swap(anya::list<T, Alloc>& lhs, anya::list<T, Alloc>& rhs) noexcept {
+    lhs.swap(rhs);
+}
 
 }
 
