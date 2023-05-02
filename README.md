@@ -22,36 +22,35 @@
 
 # 项目结构
 ## 空间配置器
-
-- 负责内存的配置和管理
-
+负责内存的配置和管理
 - [x] allocator
 - [ ] shared_ptr
 - [ ] unique_ptr
 - [ ] weak_ptr
+
 ## 迭代器
 作为容器和算法的桥梁
+- [x] normal_iterator
+- [x] reverse_iterator
+- [x] iterator_traits
+- [x] distance()
+- [x] advance()
+- [x] next()
+- [x] prev()
 
-- TODO	
 ## 容器
 本项目核心
 ### 序列容器
 - [ ] array  
   静态数组
-- [ ] vector  
+- [x] vector  
   动态数组
-- [ ] list  
+- [x] list  
   双向链表
 - [ ] deque  
   双端列表
-- [ ] stack  
-  栈
-- [ ] queue  
-  队列
 - [ ] heap  
   序列容器上的一系列操作函数
-- [ ] priority_queue  
-  优先队列
 - [ ] forward_list  
   单向链表
 
@@ -76,13 +75,25 @@
   无序可重复集合
 - [ ] unordered_multimap  
   无序可重复映射
+
 ## 算法
-- TODO
-## 仿函数
-- TODO
+- [x] 最小/最大操作
+- [x] 修改序列的操作
+- [ ] 字典序
+
 ## 适配器
-- TODO
+- [ ] stack  
+  栈
+- [ ] queue  
+  队列
+- [ ] priority_queue  
+  优先队列
+
 ## 代码规范
 命名空间：Anya
+
 ## 测试
-- TODO
+![](https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/test1.png)
+![](https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/test2.png)
+![](https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/test3.png)
+![](https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/test4.png)
