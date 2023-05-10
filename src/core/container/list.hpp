@@ -52,7 +52,7 @@ private:
         // 这个约束是为了实现 iterator 能转化为 const_iterator，但反之不行
         template<typename U>
         requires std::same_as<U*, T*>
-        list_iterator(const list_iterator<U> other)
+        list_iterator(const list_iterator<U>& other)
             noexcept : current(const_cast<Iterator>(other.base())) {}
 
     public:
