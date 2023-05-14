@@ -60,10 +60,10 @@ private:
         template<typename U>
         requires std::same_as<U*, T*>
         deque_iterator(const deque_iterator<U>& other)
-            noexcept : current(const_cast<pointer>(other.current)),
-                       first(const_cast<pointer>(other.first)),
-                       last(const_cast<pointer>(other.first)),
-                       node(const_cast<pointer>(other.node))
+            noexcept : current(const_cast<T*>(other.current)),
+                       first  (const_cast<T*>(other.first)),
+                       last   (const_cast<T*>(other.first)),
+                       node   (const_cast<T**>(other.node))
         {}
 
     public:
@@ -211,16 +211,145 @@ private:
 public:
     deque() { initialize_map(0); }
 
-    explicit deque(size_type count) { initialize_map(count); }
+    explicit deque(size_type count) { fill_initialize(count); }
+
+    deque(size_type count, const T& value) {
+        fill_initialize(count, value);
+    }
+
+    template<class InputIt>
+    requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
+    deque(InputIt first, InputIt last) {
+        using iterator_tag = anya::iter_category_t<InputIt>;
+        if constexpr (std::is_same_v<iterator_tag, anya::input_iterator_tag>) {
+            // TODO: 待完成 insert()
+            initialize_map(0);
+            throw std::runtime_error("deque(InputIt first, InputIt last) 未完成");
+        }
+        else {
+            size_t count = anya::distance(first, last);
+            initialize_map(count);
+            anya::uninitialized_copy_n(first, count, start);
+        }
+    }
+
+    deque(const deque& other) {
+        size_t count = other.size();
+        initialize_map(count);
+        anya::uninitialized_copy_n(other.begin(), count, start);
+    }
+
+    deque(deque&& other) {
+        initialize_map(0);
+        this->swap(std::forward<deque>(other));
+    }
+
+    deque(std::initializer_list<T> init) {
+        size_t count = anya::distance(init.begin(), init.end());
+        initialize_map(count);
+        anya::uninitialized_copy_n(init.begin(), count, start);
+    }
+
+    ~deque() {
+        destroy_all_node();
+        map_alloc.deallocate(map_buffer, map_size);
+        map_buffer = nullptr, map_size = 0;
+    }
+
+#pragma endregion
+
+
+#pragma region 迭代器
+public:
+    iterator
+    begin() noexcept { return start; }
+
+    const_iterator
+    begin() const noexcept { return start; }
+
+    const_iterator
+    cbegin() const noexcept { return start; }
+
+    iterator
+    end() noexcept { return finish; }
+
+    const_iterator
+    end() const noexcept { return finish; }
+
+    const_iterator
+    cend() const noexcept { return finish; }
+
+    reverse_iterator
+    rbegin() noexcept { return reverse_iterator(end()); }
+
+    const_reverse_iterator
+    rbegin() const noexcept { return const_reverse_iterator(cend()); }
+
+    const_reverse_iterator
+    crbegin() const noexcept { return const_reverse_iterator(cend()); }
+
+    reverse_iterator
+    rend() noexcept { return reverse_iterator(begin()); }
+
+    const_reverse_iterator
+    rend() const noexcept { return const_reverse_iterator(cbegin()); }
+
+    const_reverse_iterator
+    crend() const noexcept { return const_reverse_iterator(cbegin()); }
+
+#pragma endregion
+
+
+#pragma region 容量
+public:
+    [[nodiscard]] size_type
+    size() const noexcept { finish - start; };
+
+#pragma endregion
+
+#pragma region 修改器
+public:
+    void
+    swap(deque& other) noexcept {
+        std::swap(map_buffer, other.map_buffer);
+        std::swap(map_size, other.map_size);
+        std::swap(start, other.start);
+        std::swap(finish, other.finish);
+    }
 
 #pragma endregion
 
 
 #pragma region storage
 private:
+    // 开辟结点
     pointer
     alloc_node() {
         return default_alloc.allocate(buffer_size);
+    }
+
+    // 回收结点
+    void
+    dealloc_node(pointer buffer) {
+        default_alloc.deallocate(buffer, buffer_size);
+    }
+
+    // 析构并回收所有结点
+    void
+    destroy_all_node() {
+        for (map_pointer node = start.node + 1; node < finish.node; ++node) {
+            anya::destroy(*node, *node + buffer_size);
+            dealloc_node(*node);
+        }
+        if (start.node != finish.node) {
+            anya::destroy(start.current, start.last);
+            anya::destroy(finish.first, finish.current);
+            dealloc_node(finish.first);
+        }
+        else {
+            anya::destroy(start.current, finish.current);
+        }
+        dealloc_node(start.first);
     }
 
     void
@@ -241,7 +370,25 @@ private:
         finish.current = finish.first + element_count % buffer_size;
     }
 
+    void
+    fill_initialize(size_type count) {
+        initialize_map(count);
+        for (map_pointer cur = start.node; cur < finish.node; ++cur) {
+            anya::uninitialized_default_construct_n(*cur, buffer_size);
+        }
+        anya::uninitialized_default_construct(finish.first, finish.current);
+    }
+
+    void
+    fill_initialize(size_type count, const value_type &value) {
+        initialize_map(count);
+        for (map_pointer cur = start.node; cur < finish.node; ++cur) {
+            anya::uninitialized_fill_n(*cur, buffer_size, value);
+        }
+        anya::uninitialized_fill(finish.first, finish.current, value);
+    }
 #pragma endregion
+
 };
 
 }

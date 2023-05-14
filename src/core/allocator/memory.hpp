@@ -426,9 +426,6 @@ template<typename ForwardIt>
 void
 destroy(ForwardIt first, ForwardIt last) {
     using V = typename anya::iterator_traits<ForwardIt>::value_type;
-    if constexpr(std::is_pod<V>::value) {
-        return;
-    }
     for (; first != last; ++first) anya::destroy_at(anya::allocator<V>().address(*first));
 }
 
