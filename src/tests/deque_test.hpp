@@ -26,6 +26,36 @@ TEST(DequeTest, construct) {
         anya::deque<int> anya(1, 6);
         EXPECT_TRUE(*anya.begin() == *anya.rbegin());
     }
+
+    {
+        anya::deque<int> anya1(6, 0);
+        anya::deque<int> anya2(6);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::deque<int> anya1(5, 6);
+        anya::deque<int> anya2 = anya1;
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::deque<int> anya1(7, 6);
+        anya::deque<int> anya2 = std::move(anya1);
+        EXPECT_FALSE(anya1 == anya2);
+    }
+
+    {
+        anya::deque<int> anya1(4, 6);
+        anya::deque<int> anya2 = {6, 6, 6, 6};
+        EXPECT_TRUE(anya1 == anya2);
+    }
+
+    {
+        anya::deque<int> anya1(4, 6);
+        anya::deque<int> anya2(anya1.begin(), anya1.end());
+        EXPECT_TRUE(anya1 == anya2);
+    }
 }
 
 TEST(DequeTest, iterator) {
@@ -50,6 +80,25 @@ TEST(DequeTest, iterator) {
 //    auto std_rend = std.rend();
 //    typename std::deque<int>::reverse_iterator std_temp1 = std_crend;
 //    typename std::deque<int>::const_reverse_iterator std_temp2 = std_rend;
+}
+
+TEST(DequeTest, access) {
+    anya::deque<int> anya1{1, 1, 4, 5, 1, 4};
+    EXPECT_TRUE(anya1.front() == 1);
+    EXPECT_TRUE(anya1.back() == 4);
+    EXPECT_TRUE(anya1.at(3) == anya1[3]);
+    const anya::deque<int> anya3{2, 0, 0, 1, 4, 14};
+    EXPECT_TRUE(anya3.front() == 2);
+    EXPECT_TRUE(anya3.back() == 14);
+    EXPECT_TRUE(anya3.at(5) == anya3[5]);
+}
+
+TEST(DequeTest, capacity) {
+    anya::deque<int> anya1{1, 1, 4, 5, 1, 4};
+    EXPECT_TRUE(anya1.size() == 6);
+    anya::deque<int> anya2;
+    EXPECT_TRUE(anya2.empty());
+    EXPECT_TRUE(anya1.max_size() == anya1.max_size());
 }
 
 #endif //ANYA_STL_DEQUE_TEST_HPP

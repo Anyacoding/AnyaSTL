@@ -63,7 +63,7 @@ private:
 
         Tp*
         operator->() const noexcept {
-            return alloc.address(reinterpret_cast<Node*>(current)->data);
+            return std::addressof(reinterpret_cast<Node*>(current)->data);
         }
 
         // forward

@@ -180,7 +180,6 @@ TEST(ListTest, capacity) {
     anya::list<int> anya2;
     EXPECT_TRUE(anya2.empty());
     EXPECT_TRUE(anya1.max_size() == anya1.max_size());
-
 }
 
 TEST(ListTest, access) {

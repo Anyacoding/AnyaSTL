@@ -71,7 +71,7 @@ private:
         operator*() const { return *current; }
 
         pointer
-        operator->() const { return default_alloc.address(*current); }
+        operator->() const { return std::addressof(*current); }
 
         difference_type
         operator-(const deque_iterator& other) const {
@@ -241,7 +241,7 @@ public:
 
     deque(deque&& other) {
         initialize_map(0);
-        this->swap(std::forward<deque>(other));
+        this->swap(other);
     }
 
     deque(std::initializer_list<T> init) {
@@ -258,43 +258,76 @@ public:
 
 #pragma endregion
 
+#pragma region 访问
+public:
+    reference
+    at(size_type pos) {
+        if (pos >= size()) throw std::out_of_range("deque::at(size_type pos)");
+        return start[pos];
+    }
+
+    const_reference
+    at(size_type pos) const {
+        if (pos >= size()) throw std::out_of_range("deque::at(size_type pos)");
+        return start[pos];
+    }
+
+    reference
+    operator[](size_type pos) { return start[pos]; }
+
+    const_reference
+    operator[]( size_type pos ) const { return start[pos]; }
+
+    reference
+    front() { return *start; }
+
+    const_reference
+    front() const { return *start; }
+
+    reference
+    back() { return *--iterator(finish); }
+
+    const_reference
+    back() const { return *--iterator(finish); }
+#pragma endregion
+
 
 #pragma region 迭代器
 public:
-    iterator
+    [[nodiscard]] iterator
     begin() noexcept { return start; }
 
-    const_iterator
+    [[nodiscard]] const_iterator
     begin() const noexcept { return start; }
 
-    const_iterator
+    [[nodiscard]] const_iterator
     cbegin() const noexcept { return start; }
 
-    iterator
+    [[nodiscard]] iterator
     end() noexcept { return finish; }
 
-    const_iterator
+    [[nodiscard]] const_iterator
     end() const noexcept { return finish; }
 
-    const_iterator
+    [[nodiscard]] const_iterator
     cend() const noexcept { return finish; }
 
-    reverse_iterator
+    [[nodiscard]] reverse_iterator
     rbegin() noexcept { return reverse_iterator(end()); }
 
-    const_reverse_iterator
+    [[nodiscard]] const_reverse_iterator
     rbegin() const noexcept { return const_reverse_iterator(cend()); }
 
-    const_reverse_iterator
+    [[nodiscard]] const_reverse_iterator
     crbegin() const noexcept { return const_reverse_iterator(cend()); }
 
-    reverse_iterator
+    [[nodiscard]] reverse_iterator
     rend() noexcept { return reverse_iterator(begin()); }
 
-    const_reverse_iterator
+    [[nodiscard]] const_reverse_iterator
     rend() const noexcept { return const_reverse_iterator(cbegin()); }
 
-    const_reverse_iterator
+    [[nodiscard]] const_reverse_iterator
     crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
 #pragma endregion
@@ -302,10 +335,20 @@ public:
 
 #pragma region 容量
 public:
-    [[nodiscard]] size_type
-    size() const noexcept { finish - start; };
+    [[nodiscard]] bool
+    empty() const noexcept { return finish == start; }
 
+    [[nodiscard]] size_type
+    size() const noexcept { return finish - start; }
+
+    [[nodiscard]] size_type
+    max_size() const noexcept { return default_alloc.max_size(); }
+
+    // TODO: 未完成
+    void
+    shrink_to_fit() { throw std::runtime_error("deque::shrink_to_fit()未完成"); }
 #pragma endregion
+
 
 #pragma region 修改器
 public:
@@ -319,6 +362,15 @@ public:
 
 #pragma endregion
 
+#pragma region 友元比较函数
+public:
+    bool friend
+    operator==(const anya::deque<T, Allocator>& lhs,
+               const anya::deque<T, Allocator>& rhs) {
+        return lhs.size() == rhs.size() && anya::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+
+#pragma endregion
 
 #pragma region storage
 private:

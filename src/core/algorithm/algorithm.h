@@ -41,6 +41,32 @@ move_backward(BidirIt1 first, BidirIt1 last, BidirIt2 result_back) {
 #pragma endregion
 
 
+#pragma region 元素相等
+template<class InputIt1, class InputIt2>
+bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2) {
+    for (; first1 != last1; ++first1, ++first2) {
+        if (*first1 != *first2) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+template<class InputIt1, class InputIt2>
+bool equal(InputIt1 first1, InputIt1 last1,
+           InputIt2 first2, InputIt2 last2) {
+    if (anya::distance(first1,last1) != anya::distance(first2,last2))
+        return false;
+    for (; first1 != last1, first2 != last2; ++first1, ++first2) {
+        if (*first1 != *first2) {
+            return false;
+        }
+    }
+    return true;
+}
+
+#pragma endregion
 
 }
 
