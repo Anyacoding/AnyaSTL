@@ -62,7 +62,7 @@ private:
         deque_iterator(const deque_iterator<U>& other)
             noexcept : current(const_cast<T*>(other.current)),
                        first  (const_cast<T*>(other.first)),
-                       last   (const_cast<T*>(other.first)),
+                       last   (const_cast<T*>(other.last)),
                        node   (const_cast<T**>(other.node))
         {}
 
@@ -209,9 +209,9 @@ private:
 
 #pragma region 构造 && 析构
 public:
-    deque() { initialize_map(0); }
+    deque() { initialize_map_node(0); }
 
-    explicit deque(size_type count) { fill_initialize(count); }
+    explicit deque(size_type count) { fill_initialize(count, T()); }
 
     deque(size_type count, const T& value) {
         fill_initialize(count, value);
@@ -223,35 +223,36 @@ public:
         using iterator_tag = anya::iter_category_t<InputIt>;
         if constexpr (std::is_same_v<iterator_tag, anya::input_iterator_tag>) {
             // TODO: 待完成 insert()
-            initialize_map(0);
+            initialize_map_node(0);
             throw std::runtime_error("deque(InputIt first, InputIt last) 未完成");
         }
         else {
             size_t count = anya::distance(first, last);
-            initialize_map(count);
+            initialize_map_node(count);
             anya::uninitialized_copy_n(first, count, start);
         }
     }
 
     deque(const deque& other) {
         size_t count = other.size();
-        initialize_map(count);
+        initialize_map_node(count);
         anya::uninitialized_copy_n(other.begin(), count, start);
     }
 
     deque(deque&& other) {
-        initialize_map(0);
+        initialize_map_node(0);
         this->swap(other);
     }
 
     deque(std::initializer_list<T> init) {
         size_t count = anya::distance(init.begin(), init.end());
-        initialize_map(count);
+        initialize_map_node(count);
         anya::uninitialized_copy_n(init.begin(), count, start);
     }
 
     ~deque() {
         destroy_all_node();
+        dealloc_node(start.first);
         map_alloc.deallocate(map_buffer, map_size);
         map_buffer = nullptr, map_size = 0;
     }
@@ -260,34 +261,34 @@ public:
 
 #pragma region 访问
 public:
-    reference
+    [[nodiscard]] reference
     at(size_type pos) {
         if (pos >= size()) throw std::out_of_range("deque::at(size_type pos)");
         return start[pos];
     }
 
-    const_reference
+    [[nodiscard]] const_reference
     at(size_type pos) const {
         if (pos >= size()) throw std::out_of_range("deque::at(size_type pos)");
         return start[pos];
     }
 
-    reference
+    [[nodiscard]] reference
     operator[](size_type pos) { return start[pos]; }
 
-    const_reference
+    [[nodiscard]] const_reference
     operator[]( size_type pos ) const { return start[pos]; }
 
-    reference
+    [[nodiscard]] reference
     front() { return *start; }
 
-    const_reference
+    [[nodiscard]] const_reference
     front() const { return *start; }
 
-    reference
+    [[nodiscard]] reference
     back() { return *--iterator(finish); }
 
-    const_reference
+    [[nodiscard]] const_reference
     back() const { return *--iterator(finish); }
 #pragma endregion
 
@@ -347,11 +348,77 @@ public:
     // TODO: 未完成
     void
     shrink_to_fit() { throw std::runtime_error("deque::shrink_to_fit()未完成"); }
+
 #pragma endregion
 
 
 #pragma region 修改器
 public:
+    void
+    clear() noexcept { destroy_all_node(); }
+
+    /*!
+     * @param pos     将内容插入到它前面的迭代器, pos 可以是 end() 迭代器
+     * @param value   要插入的元素值
+     * @return        指向被插入 value 的迭代器
+     */
+    iterator
+    insert(const_iterator pos, const T& value) {
+        auto it = prepare_at(pos - start, 1);
+        *it = value;
+        return it;
+    }
+
+    /*!
+     * @param pos     将内容插入到它前面的迭代器, pos 可以是 end() 迭代器
+     * @param value   要插入的元素值
+     * @return        指向被插入 value 的迭代器
+     */
+    iterator
+    insert(const_iterator pos, T&& value) {
+        auto it = prepare_at(pos - start, 1);
+        *it = std::move(value);
+        return it;
+    }
+
+    /*!
+     * @param pos      将内容插入到它前面的迭代器, pos 可以是 end() 迭代器
+     * @param count    副本个数
+     * @param value    要插入的元素值
+     * @return         指向首个被插入元素的迭代器，或者在 count == 0 时返回 pos
+     */
+    iterator
+    insert(const_iterator pos, size_type count, const T& value) {
+        auto it = prepare_at(pos - start, count);
+        auto ret = it;
+        while (count--) *it++ = value;
+        return ret;
+    }
+
+    /*!
+     * @tparam InputIt
+     * @param pos       将内容插入到它前面的迭代器, pos 可以是 end() 迭代器
+     * @param first     要插入的元素范围，不能是指向调用 insert 所用的容器中的迭代器
+     * @param last      要插入的元素范围，不能是指向调用 insert 所用的容器中的迭代器
+     * @return          指向首个被插入元素的迭代器，或者在 first == last 时返回 pos
+     */
+    template<class InputIt>
+    requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
+    iterator
+    insert(const_iterator pos, InputIt first, InputIt last) {
+
+    }
+
+    /*!
+     * @param pos       将内容插入到它前面的迭代器, pos 可以是 end() 迭代器
+     * @param ilist     要插入的值来源的 initializer_list
+     * @return          指向首个被插入元素的迭代器，或者在 ilist 为空时返回 pos
+     */
+    iterator
+    insert(const_iterator pos, std::initializer_list<T> ilist) {
+
+    }
+
     void
     swap(deque& other) noexcept {
         std::swap(map_buffer, other.map_buffer);
@@ -386,7 +453,7 @@ private:
         default_alloc.deallocate(buffer, buffer_size);
     }
 
-    // 析构并回收所有结点
+    // 析构并回收所有结点,但是保留一个头结点维护容器的合法性
     void
     destroy_all_node() {
         for (map_pointer node = start.node + 1; node < finish.node; ++node) {
@@ -399,13 +466,14 @@ private:
             dealloc_node(finish.first);
         }
         else {
+            // 头结点需要保留
             anya::destroy(start.current, finish.current);
         }
-        dealloc_node(start.first);
+        finish = start;
     }
 
     void
-    initialize_map(size_type element_count) {
+    initialize_map_node(size_type element_count) {
         size_t node_count = element_count / buffer_size + 1;
         this->map_size = anya::max(default_map_size, node_count + 2);
         this->map_buffer = map_alloc.allocate(map_size);
@@ -423,8 +491,27 @@ private:
     }
 
     void
+    update_map_node(size_t count, bool at_front) {
+        size_t old_nodes = finish.node - start.node + 1;
+        size_t new_nodes = old_nodes + count;
+
+        // 扩容策略为最少两倍，并且头尾都加1
+        map_pointer new_start;
+        size_t new_map_size = map_size + anya::max(map_size, count) + 2;
+        map_pointer new_map = map_alloc.allocate(new_map_size);
+        new_start = new_map + (new_map_size - new_nodes) / 2 + (at_front ? count : 0);
+        // 将原来的node拷贝过去
+        anya::copy(start.node, finish.node + 1, new_start);
+        map_alloc.deallocate(map_buffer, map_size);
+        map_buffer = new_map, map_size = new_map_size;
+        // 重设迭代器的结点位置即可
+        start.set_node(new_start);
+        finish.set_node(new_start + old_nodes - 1);
+    }
+
+    void
     fill_initialize(size_type count) {
-        initialize_map(count);
+        initialize_map_node(count);
         for (map_pointer cur = start.node; cur < finish.node; ++cur) {
             anya::uninitialized_default_construct_n(*cur, buffer_size);
         }
@@ -433,11 +520,82 @@ private:
 
     void
     fill_initialize(size_type count, const value_type &value) {
-        initialize_map(count);
+        initialize_map_node(count);
         for (map_pointer cur = start.node; cur < finish.node; ++cur) {
             anya::uninitialized_fill_n(*cur, buffer_size, value);
         }
         anya::uninitialized_fill(finish.first, finish.current, value);
+    }
+#pragma endregion
+
+#pragma region 工具函数
+private:
+    // 当前区间前面有几个空余元素位置
+    size_type
+    front_leave() {
+        return difference_type(buffer_size) * (start.node - map_buffer) + (start.current - start.first);
+    }
+
+    // 当前区间后面有几个空余元素位置
+    size_type
+    back_leave() {
+        return difference_type(buffer_size) * ((map_buffer + (map_size - 1)) - finish.node) + (finish.last - finish.current);
+    }
+
+    // 插入的准备工作
+    iterator
+    prepare_at(size_type index, size_type count) {
+        size_t size = this->size();
+        // 根据插入点位置选择左移或者右移
+        if (index < size / 2) {
+            // 左移front
+            prepare_at_front(count);
+            anya::move_n(start + difference_type(count), index, start);
+        }
+        else {
+            // 右移back
+            prepare_at_back(count);
+            anya::move_n_backward(finish - difference_type(count), size - index, finish);
+        }
+        return start + difference_type(index);
+    }
+
+    // 在front腾出位置，并更新头迭代器
+    void
+    prepare_at_front(size_t count) {
+        size_t leave = front_leave();
+        // map_size 不够大，更新 map_size
+        if (leave < count) {
+            update_map_node((count - leave) / buffer_size + 1, true);
+        }
+        size_t node_leave = start.current - start.first;
+        if (node_leave < count) {
+            // 当前 node 剩余的 slot 不够装，申请分配新的 node 指向的内存
+            size_t nodes = (count - node_leave) / buffer_size + 1;
+            map_pointer cur = start.node - 1;
+            while (nodes--) *cur-- = alloc_node();
+        }
+        start -= difference_type(count);
+        anya::uninitialized_default_construct_n(start, count);
+    }
+
+    // 在back腾出位置，并更新尾迭代器
+    void
+    prepare_at_back(size_t count) {
+        size_t leave = back_leave();
+        // map_size 不够大，更新 map_size
+        if (leave <= count) {
+            update_map_node((count - leave) / buffer_size + 1, false);
+        }
+        size_t node_leave = finish.last - finish.current;
+        if (node_leave < count) {
+            // 当前 node 剩余的 slot 不够装，申请分配新的 node 指向的内存
+            size_t nodes = (count - node_leave) / buffer_size + 1;
+            map_pointer cur = finish.node + 1;
+            while (nodes--) *cur++ = alloc_node();
+        }
+        anya::uninitialized_default_construct_n(finish, count);
+        finish += difference_type(count);
     }
 #pragma endregion
 

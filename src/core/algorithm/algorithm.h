@@ -10,12 +10,12 @@
 namespace anya {
 
 #pragma region 最小/最大操作
-template<typename T>
+template<class T>
 constexpr T min(const T &a, const T &b) {
     return a < b ? a : b;
 }
 
-template<typename T>
+template<class T>
 constexpr T max(const T &a, const T &b) {
     return a < b ? b : a;
 }
@@ -23,6 +23,20 @@ constexpr T max(const T &a, const T &b) {
 
 
 #pragma region 修改序列的操作
+template<class ForwardIt, class OutputIt>
+constexpr OutputIt
+copy(ForwardIt first, ForwardIt last, OutputIt result) {
+    while (first != last) *result++ = *first++;
+    return result;
+}
+
+template<class ForwardIt, class OutputIt>
+constexpr OutputIt
+copy_n(ForwardIt first, size_t n, OutputIt result) {
+    while (n--) *result++ = *first++;
+    return result;
+}
+
 template<class InputIt, class OutputIt>
 constexpr OutputIt
 move(InputIt first, InputIt last, OutputIt d_first) {
@@ -32,12 +46,27 @@ move(InputIt first, InputIt last, OutputIt d_first) {
     return d_first;
 }
 
+template<class ForwardIt, class OutputIt>
+constexpr OutputIt
+move_n(ForwardIt first, size_t n, OutputIt result) {
+    while (n--) *result++ = std::move(*first++);
+    return result;
+}
+
 template<class BidirIt1, class BidirIt2>
 constexpr BidirIt2
 move_backward(BidirIt1 first, BidirIt1 last, BidirIt2 result_back) {
     while (first != last) *(--result_back) = std::move(*(--last));
     return result_back;
 }
+
+template<class BidirIt1, class BidirIt2>
+constexpr BidirIt2
+move_n_backward(BidirIt1 last, size_t n, BidirIt2 result_back) {
+    while (n--) *(--result_back) = std::move(*(--last));
+    return result_back;
+}
+
 #pragma endregion
 
 

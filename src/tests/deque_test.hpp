@@ -14,7 +14,7 @@
 TEST(DequeTest, construct) {
     {
         anya::deque<int> anya{};
-        EXPECT_TRUE(*anya.begin() == *anya.rbegin());
+        EXPECT_TRUE(anya.empty());
     }
 
     {
@@ -30,6 +30,7 @@ TEST(DequeTest, construct) {
     {
         anya::deque<int> anya1(6, 0);
         anya::deque<int> anya2(6);
+        // for (auto num : anya2) std::cout << num << " ";  std::cout << std::endl;
         EXPECT_TRUE(anya1 == anya2);
     }
 
@@ -99,6 +100,31 @@ TEST(DequeTest, capacity) {
     anya::deque<int> anya2;
     EXPECT_TRUE(anya2.empty());
     EXPECT_TRUE(anya1.max_size() == anya1.max_size());
+}
+
+TEST(DequeTest, clear) {
+    anya::deque<int> anya1{1, 1, 4, 5, 1, 4};
+    anya1.clear();
+    EXPECT_TRUE(anya1.size() == 0);
+}
+
+TEST(DequeTest, insert) {
+    {
+        anya::deque<int> anya1;
+        anya::deque<int> anya2{1, 1, 4, 5, 1, 4};
+        for (auto it = anya2.begin(); it != anya2.end(); ++it) {
+            auto temp = *it;
+            anya1.insert(anya1.end(), temp);
+        }
+        EXPECT_TRUE(anya1 == anya2);
+
+    }
+    {
+        anya::deque<int> anya1;
+        anya::deque<int> anya2{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
+        anya1.insert(anya1.end(), 15, 6);
+        EXPECT_TRUE(anya1 == anya2);
+    }
 }
 
 #endif //ANYA_STL_DEQUE_TEST_HPP
