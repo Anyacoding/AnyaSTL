@@ -222,9 +222,8 @@ public:
     deque(InputIt first, InputIt last) {
         using iterator_tag = anya::iter_category_t<InputIt>;
         if constexpr (std::is_same_v<iterator_tag, anya::input_iterator_tag>) {
-            // TODO: 待完成 insert()
             initialize_map_node(0);
-            throw std::runtime_error("deque(InputIt first, InputIt last) 未完成");
+            while (first != last) insert(finish, *first++);
         }
         else {
             size_t count = anya::distance(first, last);
@@ -258,6 +257,49 @@ public:
     }
 
 #pragma endregion
+
+#pragma region 赋值
+public:
+    deque&
+    operator=(const deque& other) {
+        if (this != &other) assign(other.begin(), other.end());
+        return *this;
+    }
+
+    deque&
+    operator=(deque&& other) noexcept {
+        if (this != &other) this->swap(other);
+        return *this;
+    }
+
+    deque&
+    operator=(std::initializer_list<T> ilist) {
+        assign(ilist);
+        return *this;
+    }
+
+    void
+    assign(size_type count, const T& value) {
+        clear();
+        insert(end(), count, value);
+    }
+
+    template< class InputIt >
+    void
+    assign(InputIt first, InputIt last) {
+        clear();
+        insert(end(), first, last);
+    }
+
+    void
+    assign(std::initializer_list<T> ilist) {
+        clear();
+        insert(end(), ilist);
+    }
+
+#pragma endregion
+
+
 
 #pragma region 访问
 public:
@@ -345,9 +387,9 @@ public:
     [[nodiscard]] size_type
     max_size() const noexcept { return default_alloc.max_size(); }
 
-    // TODO: 未完成
+    // 选择不予处理（摆烂）
     void
-    shrink_to_fit() { throw std::runtime_error("deque::shrink_to_fit()未完成"); }
+    shrink_to_fit() { }
 
 #pragma endregion
 
@@ -406,7 +448,17 @@ public:
     requires std::derived_from<typename InputIt::iterator_category, anya::input_iterator_tag>
     iterator
     insert(const_iterator pos, InputIt first, InputIt last) {
-
+        size_t index = pos - start;
+        using iterator_tag = anya::iter_category_t<InputIt>;
+        if constexpr (std::is_same_v<iterator_tag, anya::input_iterator_tag>) {
+            while (first != last) insert(start + index, *first++), ++index;
+        }
+        else {
+            size_t count = anya::distance(first, last);
+            auto it = prepare_at(index, count);
+            anya::uninitialized_copy(first, last, it);
+        }
+        return start + index;
     }
 
     /*!
@@ -416,7 +468,10 @@ public:
      */
     iterator
     insert(const_iterator pos, std::initializer_list<T> ilist) {
-
+        size_t index = pos - start;
+        auto it = prepare_at(index, ilist.size());
+        anya::uninitialized_copy(ilist.begin(), ilist.end(), it);
+        return start + index;
     }
 
     void

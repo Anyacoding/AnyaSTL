@@ -125,6 +125,57 @@ TEST(DequeTest, insert) {
         anya1.insert(anya1.end(), 15, 6);
         EXPECT_TRUE(anya1 == anya2);
     }
+    {
+        anya::deque<int> anya1;
+        anya::deque<int> anya2{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
+        anya1.insert(anya1.end(), anya2.begin(), anya2.end());
+        EXPECT_TRUE(anya1 == anya2);
+    }
+    {
+        anya::deque<int> anya1;
+        auto anya2 = {1, 1, 4, 5, 1, 4};
+        anya1.insert(anya1.end(), anya2);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+}
+
+TEST(DequeTest, assign) {
+    {
+        anya::deque<int> anya1;
+        anya::deque<int> anya2{1, 1, 4, 5, 1, 4};
+        anya1 = anya2;
+        EXPECT_TRUE(anya1 == anya2);
+    }
+    {
+        anya::deque<int> anya1;
+        anya::deque<int> anya2{1, 1, 4, 5, 1, 4};
+        anya1 = std::move(anya2);
+        EXPECT_TRUE(anya1 != anya2);
+    }
+    {
+        anya::deque<int> anya1;
+        auto anya2 = {1, 1, 4, 5, 1, 4};
+        anya1 = anya2;
+        EXPECT_TRUE(anya1 == anya2);
+    }
+    {
+        anya::deque<int> anya1;
+        anya::deque<int> anya2{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
+        anya1.assign(15, 6);
+        EXPECT_TRUE(anya1 == anya2);
+    }
+    {
+        anya::deque<int> anya1;
+        anya::deque<int> anya2{1, 1, 4, 5, 1, 4};
+        anya1.assign(anya2.begin(), anya2.end());
+        EXPECT_TRUE(anya1 == anya2);
+    }
+    {
+        anya::deque<int> anya1;
+        auto anya2 = {1, 1, 4, 5, 1, 4};
+        anya1.assign(anya2);
+        EXPECT_TRUE(anya1 == anya2);
+    }
 }
 
 #endif //ANYA_STL_DEQUE_TEST_HPP
