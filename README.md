@@ -47,12 +47,10 @@
   动态数组
 - [x] list  
   双向链表
-- [ ] deque  
+- [x] deque  
   双端列表
 - [ ] heap  
   序列容器上的一系列操作函数
-- [ ] forward_list  
-  单向链表
 
 ### 关联式容器
 - [ ] RB-tree  
@@ -79,7 +77,7 @@
 ## 算法
 - [x] 最小/最大操作
 - [x] 修改序列的操作
-- [ ] 字典序
+- [x] 字典序
 
 ## 适配器
 - [ ] stack  
@@ -92,7 +90,7 @@
 ## 代码规范
 命名空间：Anya
 
-## 测试
+## 测试（部分截图）
 <img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl1.png" width="600" style="margin: 0 auto;">
 <img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl2.png" width="600" style="margin: 0 auto;">
 <img alt="" src="https://anya-1308928365.cos.ap-nanjing.myqcloud.com/blog/anyastl3.png" width="600" style="margin: 0 auto;">
