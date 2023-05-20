@@ -40,10 +40,10 @@ private:
 
     public:
         using iterator_category = typename deque_iterator::iterator_category;
-        using value_type        = typename deque_iterator::value_type ;
-        using difference_type   = typename deque_iterator::difference_type ;
-        using pointer           = typename deque_iterator::pointer ;
-        using reference         = typename deque_iterator::reference ;
+        using value_type        = typename deque_iterator::value_type;
+        using difference_type   = typename deque_iterator::difference_type;
+        using pointer           = typename deque_iterator::pointer;
+        using reference         = typename deque_iterator::reference;
 
     private:
         pointer current{};      // 当前元素
@@ -184,6 +184,8 @@ private:
             first = *new_node;
             last = first + difference_type(buffer_size);
         }
+
+
     };
 
 public:
@@ -456,7 +458,10 @@ public:
         else {
             size_t count = anya::distance(first, last);
             auto it = prepare_at(index, count);
-            anya::uninitialized_copy(first, last, it);
+            // 不能采用构造的方法，因为 prepare_at() 已经采用了构造
+            // 重复构造会内存泄漏
+            // anya::uninitialized_copy(first, last, it);
+            anya::copy_n(first, count, it);
         }
         return start + index;
     }
@@ -470,8 +475,134 @@ public:
     insert(const_iterator pos, std::initializer_list<T> ilist) {
         size_t index = pos - start;
         auto it = prepare_at(index, ilist.size());
-        anya::uninitialized_copy(ilist.begin(), ilist.end(), it);
+        anya::copy_n(ilist.begin(), ilist.size(), it);
         return start + index;
+    }
+
+    template<class... Args>
+    iterator
+    emplace(const_iterator pos, Args&&... args) {
+        auto index = pos - start;
+        auto it = prepare_at(index, 1);
+        *it = std::move(value_type(std::forward<Args>(args)...));
+        return it;
+    }
+
+    iterator
+    erase(const_iterator pos) {
+        auto next = pos + 1;
+        difference_type index = pos - start;
+        if (index < size() / 2) {
+            anya::move_backward(start, cast_to_iterator(pos), cast_to_iterator(next));
+            pop_front();
+        }
+        else {
+            anya::move(cast_to_iterator(next), finish, cast_to_iterator(pos));
+            pop_back();
+        }
+        return start + index;
+    }
+
+    iterator
+    erase(const_iterator first, const_iterator last) {
+        if (first == start && last == finish) {
+            return clear(), finish;
+        }
+        difference_type n = last - first;
+        difference_type front_elem = first - last;
+        if (front_elem < (size() - n) / 2) {
+            anya::move_backward(start, cast_to_iterator(first), cast_to_iterator(last));
+            iterator new_start = start + n;
+            anya::destroy(start, new_start);
+            for (map_pointer cur = start.node; cur < new_start.node; ++cur) {
+                dealloc_node(*cur);
+            }
+            start = new_start;
+        }
+        else {
+            anya::move(cast_to_iterator(last), finish, cast_to_iterator(first));
+            iterator new_finish = finish - n;
+            anya::destroy(new_finish, finish);
+            for (map_pointer cur = new_finish.node + 1; cur <= finish.node; ++cur) {
+                dealloc_node(*cur);
+            }
+            finish = new_finish;
+        }
+        return start + front_elem;
+    }
+
+    void
+    push_back(const T& value) {
+        emplace_back(value);
+    }
+
+    void
+    push_back(T&& value) {
+        emplace_back(std::forward<T>(value));
+    }
+
+    template<class... Args>
+    reference
+    emplace_back(Args&&... args) {
+        return *emplace(end(), std::forward<Args>(args)...);
+    }
+
+    void
+    pop_back() {
+        if (finish.current != finish.first) {
+            default_alloc.template destroy(--finish.current);
+        }
+        else {
+            dealloc_node(finish.first);
+            finish.set_node(finish.node - 1);
+            finish.current = finish.last - 1;
+            default_alloc.template destroy(finish.current);
+        }
+    }
+
+    void
+    push_front(const T& value) {
+        emplace_front(value);
+    }
+
+    void
+    push_front(T&& value) {
+        emplace_front(std::forward<T>(value));
+    }
+
+    template<class... Args>
+    reference
+    emplace_front(Args&&... args) {
+        return *emplace(begin(), std::forward<Args>(args)...);
+    }
+
+    void
+    pop_front() {
+        if (start.current != start.last - 1) {
+            default_alloc.template destroy(start.current++);
+        }
+        else {
+            default_alloc.template destroy(start.current);
+            dealloc_node(start.first);
+            start.set_node(start.node + 1);
+            start.current = start.first;
+        }
+    }
+
+    void
+    resize(size_type count) {
+        resize(count, value_type());
+    }
+
+    void
+    resize(size_type count, const value_type& value) {
+        size_type cur_size = size();
+        if (count < cur_size) {
+            erase(start + difference_type(count), finish);
+        }
+        else {
+            insert(finish, count - cur_size, value);
+        }
     }
 
     void
@@ -490,6 +621,39 @@ public:
     operator==(const anya::deque<T, Allocator>& lhs,
                const anya::deque<T, Allocator>& rhs) {
         return lhs.size() == rhs.size() && anya::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+
+    bool friend
+    operator!=(const anya::deque<T, Allocator>& lhs,
+               const anya::deque<T, Allocator>& rhs) {
+        return !(lhs == rhs);
+    };
+
+    friend bool
+    operator<(const anya::deque<T, Allocator>& lhs,
+              const anya::deque<T, Allocator>& rhs) {
+        // DONE: 将来替换成 anya::lexicographical_compare()
+        return anya::lexicographical_compare(
+            lhs.begin(), lhs.end(),
+            rhs.begin(), rhs.end());
+    }
+
+    friend bool
+    operator>(const anya::deque<T, Allocator>& lhs,
+              const anya::deque<T, Allocator>& rhs) {
+        return rhs < lhs;
+    }
+
+    friend bool
+    operator<=(const anya::deque<T, Allocator>& lhs,
+               const anya::deque<T, Allocator>& rhs) {
+        return !(rhs < lhs);
+    }
+
+    friend bool
+    operator>=(const anya::deque<T, Allocator>& lhs,
+               const anya::deque<T, Allocator>& rhs) {
+        return !(lhs < rhs);
     }
 
 #pragma endregion
@@ -562,15 +726,6 @@ private:
         // 重设迭代器的结点位置即可
         start.set_node(new_start);
         finish.set_node(new_start + old_nodes - 1);
-    }
-
-    void
-    fill_initialize(size_type count) {
-        initialize_map_node(count);
-        for (map_pointer cur = start.node; cur < finish.node; ++cur) {
-            anya::uninitialized_default_construct_n(*cur, buffer_size);
-        }
-        anya::uninitialized_default_construct(finish.first, finish.current);
     }
 
     void
@@ -652,9 +807,26 @@ private:
         anya::uninitialized_default_construct_n(finish, count);
         finish += difference_type(count);
     }
+
+    iterator
+    cast_to_iterator(const_iterator other) {
+        iterator ret;
+        ret.current = const_cast<T*>(other.current);
+        ret.first   = const_cast<T*>(other.current);
+        ret.last    = const_cast<T*>(other.last);
+        ret.node    = const_cast<T**>(other.node);
+        return ret;
+    }
 #pragma endregion
 
 };
+
+// 特化 anya::swap 算法
+template<class T, class Alloc>
+constexpr void
+swap(anya::deque<T, Alloc>& lhs, anya::deque<T, Alloc>& rhs) noexcept {
+    lhs.swap(rhs);
+}
 
 }
 

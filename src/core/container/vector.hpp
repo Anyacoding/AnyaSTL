@@ -473,8 +473,8 @@ public:
     friend bool
     operator<(const anya::vector<T, Allocator>& lhs,
               const anya::vector<T, Allocator>& rhs) {
-        // TODO: 将来替换成 anya::lexicographical_compare()
-        return std::lexicographical_compare(
+        // DONE: 将来替换成 anya::lexicographical_compare()
+        return anya::lexicographical_compare(
             lhs.begin(), lhs.end(),
             rhs.begin(), rhs.end());
     }
