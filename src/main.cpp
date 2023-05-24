@@ -5,6 +5,7 @@
 #include "tests/list_test.hpp"
 #include "tests/deque_test.hpp"
 #include "tests/stack_test.hpp"
+#include "tests/queue_test.hpp"
 #include <iterator>
 
 int main(int argc, char* argv[]) {
