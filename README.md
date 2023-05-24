@@ -67,7 +67,7 @@
 ## 适配器
 - [x] stack  
   栈
-- [ ] queue  
+- [x] queue  
   队列
 - [ ] priority_queue  
   优先队列
