@@ -24,9 +24,6 @@
 ## 空间配置器
 负责内存的配置和管理
 - [x] allocator
-- [ ] shared_ptr
-- [ ] unique_ptr
-- [ ] weak_ptr
 
 ## 迭代器
 作为容器和算法的桥梁
@@ -41,8 +38,6 @@
 ## 容器
 本项目核心
 ### 序列容器
-- [ ] array  
-  静态数组
 - [x] vector  
   动态数组
 - [x] list  
@@ -53,16 +48,6 @@
   序列容器上的一系列操作函数
 
 ### 关联式容器
-- [ ] RB-tree  
-  红黑树, set和map的基础
-- [ ] set  
-  有序集合
-- [ ] map  
-  有序映射
-- [ ] multiset  
-  有序可重复集合
-- [ ] multimap  
-  有序可重复映射
 - [ ] hashtable  
   哈希表, unordered_set和unordered_map的基础
 - [ ] unordered_set  
