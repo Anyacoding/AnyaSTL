@@ -68,7 +68,7 @@
   栈
 - [x] queue  
   队列
-- [ ] priority_queue  
+- [x] priority_queue  
   优先队列
 
 ## 代码规范
