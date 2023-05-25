@@ -14,7 +14,6 @@
 - GoogleTest
 - GoogleMock
 
-
 ## 参考书籍
 - 《STL源码剖析》
 - 《Effective Modern C++》
@@ -44,7 +43,7 @@
   双向链表
 - [x] deque  
   双端列表
-- [ ] heap  
+- [x] heap  
   序列容器上的一系列操作函数
 
 ### 关联式容器
