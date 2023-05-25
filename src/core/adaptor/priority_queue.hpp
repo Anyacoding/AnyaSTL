@@ -18,7 +18,7 @@ private:
     static_assert(std::is_same<T, typename Container::value_type>::value,
                   "value_type must be the same as the underlying container");
 
-public:
+protected:
     Container c;
     Compare comp;
 
