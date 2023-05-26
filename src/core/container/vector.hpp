@@ -224,13 +224,13 @@ public:
     cend() const noexcept { return const_iterator(finish); }
 
     constexpr reverse_iterator
-    rend() noexcept { reverse_iterator(begin()); }
+    rend() noexcept { return reverse_iterator(begin()); }
 
     constexpr const_reverse_iterator
-    rend() const noexcept { const_reverse_iterator(cbegin()); }
+    rend() const noexcept { return const_reverse_iterator(cbegin()); }
 
     constexpr const_reverse_iterator
-    crend() const noexcept { const_reverse_iterator(cbegin()); }
+    crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
 #pragma endregion
 
