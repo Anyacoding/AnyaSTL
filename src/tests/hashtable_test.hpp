@@ -44,4 +44,30 @@ TEST(HashTableTest, construct) {
     }
 }
 
+TEST(HashTableTest, iterator) {
+//    anya::hashtable<int, int> anya;
+//    auto anya_cbegin = anya.cbegin();
+//    auto anya_begin = anya.begin();
+//    typename anya::hashtable<int, int>::iterator anya_temp1 = anya_cbegin;
+//    typename anya::hashtable<int, int>::const_iterator anya_temp2 = anya_begin;
+
+//    anya::hashtable<int, int> anya;
+//    auto anya_cbegin = anya.cbegin();
+//    auto anya_begin = anya.begin();
+//    typename anya::hashtable<int, int>::iterator anya_temp1 = anya_begin;
+//    typename anya::hashtable<int, int>::const_iterator anya_temp2 = anya_cbegin;
+
+//    anya::hashtable<int, int> anya;
+//    auto anya_cend = anya.cend();
+//    auto anya_end = anya.end();
+//    typename anya::hashtable<int, int>::iterator anya_temp1 = anya_cend;
+//    typename anya::hashtable<int, int>::const_iterator anya_temp2 = anya_end;
+
+//    anya::hashtable<int, int> anya;
+//    auto anya_cend = anya.cend();
+//    auto anya_end = anya.end();
+//    typename anya::hashtable<int, int>::iterator anya_temp1 = anya_end;
+//    typename anya::hashtable<int, int>::const_iterator anya_temp2 = anya_cend;
+}
+
 #endif //ANYA_STL_HASHTABLE_TEST_HPP

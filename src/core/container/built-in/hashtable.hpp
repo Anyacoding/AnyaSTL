@@ -30,8 +30,11 @@ private:
     class hashtable_iterator
         : public anya::iterator<anya::forward_iterator_tag, Tp> {
     private:
-        bucket_node* current;  // 迭代器当前位置
-        hashtable*   table;    // 所属的容器
+        friend class hashtable;
+
+    private:
+        bucket_node* current;   // 迭代器当前位置
+        const hashtable* table; // 所属的容器
 
     public:
         using value_type      = typename hashtable_iterator::value_type;
@@ -40,18 +43,18 @@ private:
         using difference_type = typename hashtable_iterator::difference_type;
 
     public:
-        hashtable_iterator(bucket_node* node, hashtable* belong)
+        // TODO: 待确定，不知道加入const是否正确
+        hashtable_iterator(bucket_node* node, const hashtable* belong)
             : current(node), table(belong) {}
 
         hashtable_iterator() = default;
 
         hashtable_iterator(const hashtable_iterator&) = default;
 
-        // TODO: 待确定，不知道是否正确
         template<typename U>
-        requires std::same_as<U, T>
-        hashtable_iterator(const hashtable_iterator<U>& oth)
-            noexcept: current(oth.current), table(oth.table) {}
+        requires std::same_as<U, std::pair<const Key, T>>
+        hashtable_iterator(const hashtable_iterator<U>& other)
+            noexcept: current(other.current), table(other.table) {}
 
     public:
         reference
@@ -111,9 +114,12 @@ private:
     key_equal        equal_fcn{};  // 比较函数
     bucket_container buckets{};    // 桶数组
     size_t           elements{};   // 元素数量
+    float            factor = 1;   // 装置因子
 
+    // 桶的个数，以及备用质数表
     constexpr static size_t default_size = 11;
-    constexpr static size_t primers[28] = {
+    constexpr static size_t number_of_primer = 28;
+    constexpr static size_t primers[number_of_primer] = {
         53, 97, 193, 389,
         769, 1543, 3079, 6151,
         12289, 24593, 49157, 98317,
@@ -148,13 +154,57 @@ public:
 #pragma endregion
 
 
+#pragma region 赋值
+public:
+    hashtable&
+    operator=(const hashtable& other) {
+        if (&other != this) deep_copy_from(other);
+        return *this;
+    }
+
+    hashtable&
+    operator=(hashtable&& other) noexcept {
+        if (&other == this) return *this;
+        buckets = std::move(other.buckets);
+        elements = other.num_elements, other.num_elements = 0;
+        hash_fcn = std::move(other.hash_fcn), equal_fcn = std::move(other.equal_fcn);
+        return *this;
+    }
+#pragma endregion
+
+
+#pragma region 迭代器
+public:
+    iterator
+    begin() noexcept { return iterator{first_bucket(), this}; }
+
+    const_iterator
+    begin() const noexcept { return const_iterator(first_bucket(), this); }
+
+    const_iterator
+    cbegin() const noexcept { return const_iterator(first_bucket(), this); }
+
+    iterator
+    end() noexcept { return iterator(nullptr, this); }
+
+    const_iterator
+    end() const noexcept { return const_iterator(nullptr, this); }
+
+    const_iterator
+    cend() const noexcept { return const_iterator(nullptr, this); }
+#pragma endregion
+
+
 #pragma region 容量
 public:
     [[nodiscard]] bool
-    empty() const noexcept { return elements == 0; }
+    empty() const noexcept { return this->elements == 0; }
 
     [[nodiscard]] size_type
-    size() const noexcept { return elements; }
+    size() const noexcept { return this->elements; }
+
+    [[nodiscard]] size_type
+    max_size() const noexcept { return primers[number_of_primer - 1]; }
 #pragma endregion
 
 
@@ -162,6 +212,25 @@ public:
 public:
     void
     clear() { destroy_all(); }
+
+    // 设置为合适的size
+    void
+    resize(size_t hint_elements) {
+        size_t bucket_size = buckets.size();
+        if (is_overload(hint_elements, bucket_size) == false) return;
+        size_t new_bucket_size = next_primer(hint_elements);
+        bucket_container temp(new_bucket_size, nullptr);
+        bucket_node* next;
+        for (bucket_node* ptr : this->buckets) {
+            while (ptr) {
+                size_t new_index = bucket_index(ptr->value.first, new_bucket_size);
+                next = ptr->next;
+                insert_head(temp[new_index], ptr);
+                ptr = next;
+            }
+        }
+        buckets.swap(temp);
+    }
 #pragma endregion
 
 
@@ -212,11 +281,12 @@ private:
 private:
     // 头插法，让插入的结点成为新的头
     bucket_node*
-    insert_front(bucket_node*& head, bucket_node* node) {
+    insert_head(bucket_node*& head, bucket_node* node) {
         node->next = head, head = node;
         return head;
     }
 
+    // 深拷贝哈希表
     void
     deep_copy_from(const hashtable& other) {
         clear();
@@ -226,11 +296,39 @@ private:
             if (auto ptr = other.buckets[i]) {
                 while (ptr) {
                     bucket_node* temp = make_node(ptr->value);
-                    insert_front(buckets[i], temp);
+                    insert_head(buckets[i], temp);
                     ptr = ptr->next;
                 }
             }
         }
+    }
+
+    // 获取第一个非空的bucket
+    bucket_node*
+    first_bucket() const {
+        auto it = buckets.cbegin(), finish = buckets.cend();
+        while (*it == nullptr && it != finish) ++it;
+        return it == finish ? nullptr : *it;
+    }
+
+    // 判断是否超载
+    [[nodiscard]] bool
+    is_overload(size_t element_size, size_t bucket_size) const {
+        return static_cast<float>(element_size) < static_cast<float>(bucket_size) * factor;
+    }
+
+    // 获取最接近target的primer
+    [[nodiscard]] size_t
+    next_primer(size_t target) const {
+        auto finish = primers + number_of_primer;
+        auto it = std::lower_bound(primers, finish, target);
+        return it == finish ? *--finish : *it;
+    }
+
+    // 根据哈希函数获取key在size个bucket中应该位于的下标
+    size_t
+    bucket_index(const Key& key, size_t size) const {
+        return hash_fcn(key) % size;
     }
 
 #pragma endregion
