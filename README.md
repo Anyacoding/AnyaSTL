@@ -48,7 +48,7 @@
 
 ### 关联式容器
 - [ ] hashtable  
-  哈希表, unordered_set和unordered_map的基础
+  哈希表
 - [ ] unordered_set  
   无序集合
 - [ ] unordered_map  
