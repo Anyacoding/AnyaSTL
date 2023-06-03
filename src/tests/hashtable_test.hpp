@@ -70,4 +70,88 @@ TEST(HashTableTest, iterator) {
 //    typename anya::hashtable<int, int>::const_iterator anya_temp2 = anya_cend;
 }
 
+TEST(HashTableTest, emplace) {
+    {
+        anya::hashtable<int, int> anya;
+        std::unordered_multimap<int, int> std, temp;
+        anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+        for (auto num : nums) anya.emplace_unique(num, num);
+        for (auto num : nums) if (std.count(num) == 0) std.insert({num, num});
+        for (auto& kv : anya) temp.insert(kv);
+        EXPECT_TRUE(std == temp);
+    }
+
+    {
+        anya::hashtable<int, int> anya;
+        std::unordered_multimap<int, int> std, temp;
+        anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+        for (auto num : nums) anya.emplace_multi(num, num);
+        for (auto num : nums) std.insert({num, num});
+        for (auto& kv : anya) temp.insert(kv);
+        EXPECT_TRUE(std == temp);
+    }
+}
+
+TEST(HashTableTest, erase) {
+    {
+        anya::hashtable<int, int> anya;
+        std::unordered_multimap<int, int> std, temp;
+        anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+        for (auto num : nums) anya.emplace_multi(num, num);
+        for (auto num : nums) std.insert({num, num});
+        anya.erase(anya.begin(), anya.end());
+        std.erase(std.begin(), std.end());
+        for (auto& kv : anya) temp.insert(kv);
+        EXPECT_TRUE(std == temp);
+    }
+
+    {
+        anya::hashtable<int, int> anya;
+        std::unordered_multimap<int, int> std, temp;
+        anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+        for (auto num : nums) anya.emplace_multi(num, num);
+        for (auto num : nums) std.insert({num, num});
+        anya.erase(1);
+        std.erase(1);
+        for (auto& kv : anya) temp.insert(kv);
+        EXPECT_TRUE(std == temp);
+    }
+
+    {
+        anya::hashtable<int, int> anya;
+        std::unordered_multimap<int, int> std, temp;
+        anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+        for (auto num : nums) anya.emplace_multi(num, num);
+        for (auto num : nums) std.insert({num, num});
+        anya.erase(996);
+        std.erase(996);
+        for (auto& kv : anya) temp.insert(kv);
+        EXPECT_TRUE(std == temp);
+    }
+}
+
+// DONE: 有bug，但是没查出来
+TEST(HashTableTest, swap) {
+    anya::hashtable<std::string, int> anya1;
+    anya::hashtable<std::string, int> anya2;
+    std::unordered_multimap<std::string, int> std;
+    anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+    for (auto num : nums) anya1.emplace_multi("anya", num);
+    for (auto num : nums) anya2.emplace_multi("mnzn", num);
+//    for (auto num : nums) std.insert({"mnzn", num});
+//    for (auto& kv : anya2) std::cout << kv.first << " " << kv.second << std::endl;
+//    std::cout << std::endl;
+    auto temp1 = anya1;
+    auto temp2 = anya2;
+    anya1.swap(anya2);
+//    for (auto& kv : temp2) std::cout << kv.first << " " << kv.second << std::endl;
+//    std::cout << std::endl;
+//    auto it = anya1.find_range_by_key("mnzn");
+//    for (; it.first != it.second; it.first = it.first->next) {
+//        std::cout << it.first->value.first << " " << it.first->value.second << std::endl;
+//    }
+    EXPECT_TRUE(anya1 == temp2);
+    EXPECT_TRUE(anya2 == temp1);
+}
+
 #endif //ANYA_STL_HASHTABLE_TEST_HPP

@@ -43,7 +43,6 @@ private:
         using difference_type = typename hashtable_iterator::difference_type;
 
     public:
-        // TODO: 待确定，不知道加入const是否正确
         hashtable_iterator(bucket_node* node, const hashtable* belong)
             : current(node), table(belong) {}
 
@@ -76,7 +75,7 @@ private:
         friend bool
         operator==(const hashtable_iterator& lhs,
                    const hashtable_iterator& rhs) {
-            return lhs.cur == rhs.cur;
+            return lhs.current == rhs.current;
         }
 
         friend bool
@@ -231,12 +230,97 @@ public:
         }
         buckets.swap(temp);
     }
+
+    // 不可重复置入
+    template<class... Args>
+    std::pair<iterator, bool>
+    emplace_unique(Args&&... args) {
+        resize(this->elements + 1);
+        return insert_unique(value_type(std::forward<Args>(args)...));
+    }
+
+    // 可重复置入
+    template<class... Args>
+    std::pair<iterator, bool>
+    emplace_multi(Args&&... args) {
+        resize(this->elements + 1);
+        return insert_multi(value_type(std::forward<Args>(args)...));
+    }
+
+    iterator
+    erase(const_iterator pos) {
+        size_t index = bucket_index(pos->first);
+        bucket_node* current = buckets[index];
+        bucket_node* ptr = pos.current, *next = ptr->next, *pre = nullptr;
+        while (current != ptr) pre = current, current = current->next;
+        connect_next(pre, next, index);
+        destroy_node(current);
+        return {next, this};
+    }
+
+    iterator
+    erase(const_iterator first, const_iterator last) {
+        if (first == last) return {last.current, this};
+        size_t index = bucket_index(first->first), buckets_size = buckets.size();
+        bucket_node* current = buckets[index];
+        bucket_node* pre = nullptr, *next = nullptr;
+        bucket_node* start = first.current, *finish = last.current;
+        // 找到第一个迭代器的前驱
+        while (current != start) pre = current, current = current->next;
+        while (true) {
+            next = current->next, destroy_node(current);
+            current = next;
+            // 需要跨越bucket
+            if (current == nullptr) {
+                connect_next(pre, next, index), pre = nullptr;
+                while (!current && ++index < buckets_size) current = buckets[index];
+            }
+            if (current == finish) {
+                if (finish) connect_next(pre, next, index);
+                break;
+            }
+        }
+        return {last.current, this};
+    }
+
+    size_type
+    erase(const Key& key) {
+        size_t index = bucket_index(key), cnt = 0;
+        bucket_node* current = buckets[index];
+        bucket_node* pre = nullptr, *next = nullptr;
+        while (current && !equal_fcn(current->value.first, key))
+            pre = current, current = current->next;
+        // 因为相同的值肯定在同一个哈希桶里，所以这里可以直接返回
+        if (!current) return 0;
+        do {
+            next = current->next, destroy_node(current);
+            current = next, ++cnt;
+        } while (current && equal_fcn(current->value.first, key));
+        (pre ? pre->next : buckets[index]) = current;
+        return cnt;
+    }
+
+    void
+    swap(hashtable& other) noexcept {
+        buckets.swap(other.buckets);
+        std::swap(this->elements, other.elements);
+        std::swap(this->hash_fcn, other.hash_fcn);
+        std::swap(this->equal_fcn, other.equal_fcn);
+    }
 #pragma endregion
 
 
 #pragma region 友元比较函数
 public:
-
+    friend bool
+    operator==(const hashtable& lhs, const hashtable& rhs) {
+        if (&lhs == &rhs) return true;
+        if (lhs.size() != rhs.size()) return false;
+        for (const auto &kv : lhs) {
+            if (!rhs.find_by_key_value(kv)) return false;
+        }
+        return true;
+    }
 #pragma endregion
 
 
@@ -249,6 +333,26 @@ private:
         default_alloc.template construct(std::addressof(node->value), kv);
         ++this->elements;
         return node;
+    }
+
+    // 下一个非空结点，没有就返回nullptr
+    bucket_node*
+    next_node(bucket_node* cur) const {
+        if (cur == nullptr) return nullptr;
+        bucket_node* old = cur;
+        cur = cur->next;
+        if (cur == nullptr) {
+            size_t pos = bucket_index(old->value.first);
+            size_t buckets_size = buckets.size();
+            while (!cur && ++pos < buckets_size) cur = buckets[pos];
+        }
+        return cur;
+    }
+
+    // 令 pre->next = next, 当pre为nullptr时，令 buckets[index] = next
+    void
+    connect_next(bucket_node* pre, bucket_node* next, size_t index) {
+        (pre ? pre->next : buckets[index]) = next;
     }
 
     // 析构并回收buckets里的每个元素
@@ -268,12 +372,12 @@ private:
 
     // 析构并回收链表的一个节点
     void
-    destroy_node(bucket_node* node) {
+    destroy_node(bucket_node*& node) {
         default_alloc.template destroy(std::addressof(node->value));
         bucket_node_alloc.deallocate(node, 1);
+        node = nullptr;
         --this->elements;
     }
-
 #pragma endregion
 
 
@@ -284,6 +388,42 @@ private:
     insert_head(bucket_node*& head, bucket_node* node) {
         node->next = head, head = node;
         return head;
+    }
+
+    // 尾插法，插到pre的后面
+    bucket_node*
+    insert_tail(bucket_node* pre, bucket_node* node) {
+        node->next = pre->next, pre->next = node;
+        return node;
+    }
+
+    // 不重复插入
+    std::pair<iterator, bool>
+    insert_unique(const value_type& kv) {
+        const size_t pos = bucket_index(kv.first);
+        for (auto cur = buckets[pos]; cur != nullptr; cur = cur->next) {
+            if (equal_fcn(cur->value.first, kv.first)) {
+                return {iterator(cur, this), false};
+            }
+        }
+        // 直接头插法
+        auto head = insert_head(buckets[pos], make_node(kv));
+        return {iterator(head, this), true};
+    }
+
+    // 可重复插入
+    std::pair<iterator, bool>
+    insert_multi(const value_type& kv) {
+        const size_t pos = bucket_index(kv.first);
+        for (auto cur = buckets[pos]; cur; cur = cur->next) {
+            if (equal_fcn(cur->value.first, kv.first)) {
+                // 尾插法接到cur的后面
+                auto tail = insert_tail(cur, make_node(kv));
+                return {iterator(tail, this), true};
+            }
+        }
+        auto head = insert_head(buckets[pos], make_node(kv));
+        return {iterator(head, this), true};
     }
 
     // 深拷贝哈希表
@@ -311,10 +451,10 @@ private:
         return it == finish ? nullptr : *it;
     }
 
-    // 判断是否超载
+    // 判断是否超载, 超载返回true
     [[nodiscard]] bool
     is_overload(size_t element_size, size_t bucket_size) const {
-        return static_cast<float>(element_size) < static_cast<float>(bucket_size) * factor;
+        return static_cast<float>(element_size) > static_cast<float>(bucket_size) * factor;
     }
 
     // 获取最接近target的primer
@@ -326,9 +466,43 @@ private:
     }
 
     // 根据哈希函数获取key在size个bucket中应该位于的下标
-    size_t
+    [[nodiscard]] size_t
     bucket_index(const Key& key, size_t size) const {
         return hash_fcn(key) % size;
+    }
+
+    [[nodiscard]] size_t
+    bucket_index(const Key& key) const {
+        return bucket_index(key, buckets.size());
+    }
+
+public:
+    // 查找第一个k为key的结点
+    bucket_node*
+    find_by_key(const Key& key) const {
+        size_t pos = bucket_index(key);
+        bucket_node* current = buckets[pos];
+        while (current && !equal_fcn(current->value.first, key)) current = current->next;
+        return current;
+    }
+
+    // 查找k为key的结点范围
+    std::pair<bucket_node*, bucket_node*>
+    find_range_by_key(const Key& key) const {
+        bucket_node* start = find_by_key(key);
+        bucket_node* finish = start ? start->next : nullptr;
+        while (finish && equal_fcn(finish->value.first, key)) finish = finish->next;
+        return {start, finish};
+    }
+
+    // 查找是否存在这个kv
+    bool
+    find_by_key_value(const value_type& kv) const {
+        // DONE: range.first 向后迭代时不能是 ++range.first，否则会错过 range.first != range.second
+        for (auto range = find_range_by_key(kv.first); range.first != range.second; range.first = range.first->next) {
+            if (range.first->value.second == kv.second) return true;
+        }
+        return false;
     }
 
 #pragma endregion
