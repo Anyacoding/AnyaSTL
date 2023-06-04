@@ -223,6 +223,8 @@ public:
         assign_copy(ilist.begin(), ilist.end());
     }
 
+    allocator_type
+    get_allocator() const noexcept { return alloc; }
 #pragma endregion
 
 

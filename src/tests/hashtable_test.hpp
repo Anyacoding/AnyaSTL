@@ -154,4 +154,36 @@ TEST(HashTableTest, swap) {
     EXPECT_TRUE(anya2 == temp1);
 }
 
+TEST(HashTableTest, find) {
+    anya::hashtable<std::string, int> anya1;
+    anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+    for (auto num : nums) anya1.emplace_multi("anya", num);
+    EXPECT_TRUE(anya1.count("anya") == anya1.size());
+    auto it = anya1.find("anya");
+    EXPECT_TRUE(it->second == 1);
+}
+
+TEST(HashTableTest, bucket_interface) {
+    anya::hashtable<std::string, int> anya1;
+    anya::hashtable<std::string, int> anya2;
+    anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+    for (auto num : nums) anya1.emplace_multi("anya", num);
+    for (auto num : nums) anya2.emplace_multi("mnzn", num);
+    EXPECT_TRUE(anya1.bucket_count() == anya2.bucket_count());
+    EXPECT_TRUE(anya1.max_bucket_count() == anya2.max_bucket_count());
+    EXPECT_TRUE(anya1.bucket_size(anya1.bucket("anya")) == anya2.bucket_size(anya2.bucket("mnzn")));
+}
+
+TEST(HashTableTest, hash_policy) {
+    anya::hashtable<std::string, int> anya1;
+    anya::hashtable<std::string, int> anya2;
+    anya::vector<int> nums{1, 1, 4, 5, 1, 4};
+    for (auto num : nums) anya1.emplace_multi("anya", num);
+    for (auto num : nums) anya2.emplace_multi("mnzn", num);
+    EXPECT_TRUE(anya1.load_factor() == anya2.load_factor());
+    EXPECT_TRUE(anya1.max_load_factor() == anya2.max_load_factor());
+    anya1.rehash(100); anya2.rehash(100);
+    EXPECT_TRUE(anya1.bucket_count() == anya2.bucket_count());
+    EXPECT_TRUE(anya1.size() == anya2.size());
+}
 #endif //ANYA_STL_HASHTABLE_TEST_HPP

@@ -146,7 +146,6 @@ public:
     assign(std::initializer_list<T> ilist) {
         assign_aux(ilist.begin(), ilist.end(), ilist.size());
     }
-
 #pragma endregion
 
 #pragma region 元素访问

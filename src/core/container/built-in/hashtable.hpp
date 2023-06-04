@@ -169,6 +169,9 @@ public:
         hash_fcn = std::move(other.hash_fcn), equal_fcn = std::move(other.equal_fcn);
         return *this;
     }
+
+    allocator_type
+    get_allocator() const noexcept { return default_alloc; }
 #pragma endregion
 
 
@@ -203,7 +206,7 @@ public:
     size() const noexcept { return this->elements; }
 
     [[nodiscard]] size_type
-    max_size() const noexcept { return primers[number_of_primer - 1]; }
+    max_size() const noexcept { return default_alloc.max_size(); }
 #pragma endregion
 
 
@@ -310,6 +313,79 @@ public:
 #pragma endregion
 
 
+#pragma region 查找
+public:
+    size_t
+    count(const Key& key) const {
+        size_t cnt = 0, pos = bucket_index(key);
+        bucket_node* current = buckets[pos];
+        while (current && !equal_fcn(current->value.first, key))
+            current = current->next;
+        while (current && equal_fcn(current->value.first, key))
+            current = current->next, ++cnt;
+        return cnt;
+    }
+
+    iterator
+    find(const Key& key) { return {find_by_key(key), this}; }
+
+    const_iterator
+    find(const Key& key) const { return {find_by_key(key), this}; }
+
+    std::pair<iterator, iterator>
+    equal_range(const Key& key) {
+        auto tmp = find_range_by_key(key);
+        return {{tmp.first,  this}, {tmp.second, this}};
+    }
+
+    std::pair<const_iterator, const_iterator>
+    equal_range(const Key& key) const {
+        auto tmp = find_range_by_key(key);
+        return {{tmp.first,  this}, {tmp.second, this}};
+    }
+#pragma endregion
+
+
+#pragma region 桶接口
+public:
+    [[nodiscard]] size_type
+    bucket_count() const { return buckets.size(); }
+
+    [[nodiscard]] size_type
+    max_bucket_count() const { return primers[number_of_primer - 1]; }
+
+    [[nodiscard]] size_type
+    bucket_size(size_type n) const {
+        size_type cnt = 0;
+        bucket_node* current = buckets[n];
+        while (current) current = current->next, ++cnt;
+        return cnt;
+    }
+
+    [[nodiscard]] size_type
+    bucket(const Key& key) const { return bucket_index(key); }
+#pragma endregion
+
+
+#pragma region 哈希策略
+public:
+    [[nodiscard]] float
+    load_factor() const { return size() / bucket_count(); }
+
+    [[nodiscard]] float
+    max_load_factor() const { return factor; }
+
+    void
+    max_load_factor(float ml) { factor = ml; }
+
+    void
+    rehash(size_type count) { resize(count); }
+
+    void
+    reserve(size_type count) { rehash(std::ceil(static_cast<float>(count) / max_load_factor())); }
+#pragma endregion
+
+
 #pragma region 友元比较函数
 public:
     friend bool
@@ -317,9 +393,14 @@ public:
         if (&lhs == &rhs) return true;
         if (lhs.size() != rhs.size()) return false;
         for (const auto &kv : lhs) {
-            if (!rhs.find_by_key_value(kv)) return false;
+            if (!rhs.contain_by_key_value(kv)) return false;
         }
         return true;
+    }
+
+    friend bool
+    operator!=(const hashtable& lhs, const hashtable& rhs) {
+        return !(rhs == lhs);
     }
 #pragma endregion
 
@@ -378,6 +459,16 @@ private:
         node = nullptr;
         --this->elements;
     }
+#pragma endregion
+
+
+#pragma region 观察器
+public:
+    hasher
+    hash_function() const { return hash_fcn; }
+
+    key_equal
+    key_eq() const { return equal_fcn; }
 #pragma endregion
 
 
@@ -476,7 +567,6 @@ private:
         return bucket_index(key, buckets.size());
     }
 
-public:
     // 查找第一个k为key的结点
     bucket_node*
     find_by_key(const Key& key) const {
@@ -497,7 +587,7 @@ public:
 
     // 查找是否存在这个kv
     bool
-    find_by_key_value(const value_type& kv) const {
+    contain_by_key_value(const value_type& kv) const {
         // DONE: range.first 向后迭代时不能是 ++range.first，否则会错过 range.first != range.second
         for (auto range = find_range_by_key(kv.first); range.first != range.second; range.first = range.first->next) {
             if (range.first->value.second == kv.second) return true;

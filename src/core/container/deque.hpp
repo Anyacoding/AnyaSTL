@@ -299,6 +299,8 @@ public:
         insert(end(), ilist);
     }
 
+    allocator_type
+    get_allocator() const noexcept { return default_alloc; }
 #pragma endregion
 
 
