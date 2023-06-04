@@ -165,12 +165,12 @@ public:
     operator=(hashtable&& other) noexcept {
         if (&other == this) return *this;
         buckets = std::move(other.buckets);
-        elements = other.num_elements, other.num_elements = 0;
+        elements = other.elements, other.elements = 0;
         hash_fcn = std::move(other.hash_fcn), equal_fcn = std::move(other.equal_fcn);
         return *this;
     }
 
-    allocator_type
+    [[nodiscard]] allocator_type
     get_allocator() const noexcept { return default_alloc; }
 #pragma endregion
 
@@ -315,7 +315,7 @@ public:
 
 #pragma region 查找
 public:
-    size_t
+    [[nodiscard]] size_t
     count(const Key& key) const {
         size_t cnt = 0, pos = bucket_index(key);
         bucket_node* current = buckets[pos];
@@ -338,7 +338,7 @@ public:
         return {{tmp.first,  this}, {tmp.second, this}};
     }
 
-    std::pair<const_iterator, const_iterator>
+    [[nodiscard]] std::pair<const_iterator, const_iterator>
     equal_range(const Key& key) const {
         auto tmp = find_range_by_key(key);
         return {{tmp.first,  this}, {tmp.second, this}};
@@ -383,6 +383,16 @@ public:
 
     void
     reserve(size_type count) { rehash(std::ceil(static_cast<float>(count) / max_load_factor())); }
+#pragma endregion
+
+
+#pragma region 观察器
+public:
+    [[nodiscard]] hasher
+    hash_function() const { return hash_fcn; }
+
+    [[nodiscard]] key_equal
+    key_eq() const { return equal_fcn; }
 #pragma endregion
 
 
@@ -459,16 +469,6 @@ private:
         node = nullptr;
         --this->elements;
     }
-#pragma endregion
-
-
-#pragma region 观察器
-public:
-    hasher
-    hash_function() const { return hash_fcn; }
-
-    key_equal
-    key_eq() const { return equal_fcn; }
 #pragma endregion
 
 
@@ -594,9 +594,21 @@ private:
         }
         return false;
     }
-
 #pragma endregion
 };
+
+// 特化 anya::swap 算法
+template<
+    class Key,
+    class T,
+    class Hash      = std::hash<Key>,
+    class KeyEqual  = std::equal_to<Key>,
+    class Allocator = anya::allocator<std::pair<const Key, T>>>
+constexpr void
+swap(anya::hashtable<Key, T, Hash, KeyEqual, Allocator>& lhs,
+     anya::hashtable<Key, T, Hash, KeyEqual, Allocator>& rhs) noexcept {
+    lhs.swap(rhs);
+}
 
 }
 

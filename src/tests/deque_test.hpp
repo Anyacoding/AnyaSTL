@@ -99,7 +99,7 @@ TEST(DequeTest, capacity) {
     EXPECT_TRUE(anya1.size() == 6);
     anya::deque<int> anya2;
     EXPECT_TRUE(anya2.empty());
-    EXPECT_TRUE(anya1.max_size() == anya1.max_size());
+    EXPECT_TRUE(anya1.max_size() == anya2.max_size());
 }
 
 TEST(DequeTest, clear) {
@@ -119,18 +119,21 @@ TEST(DequeTest, insert) {
         EXPECT_TRUE(anya1 == anya2);
 
     }
+
     {
         anya::deque<int> anya1;
         anya::deque<int> anya2{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
         anya1.insert(anya1.end(), 15, 6);
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         anya::deque<int> anya2{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
         anya1.insert(anya1.end(), anya2.begin(), anya2.end());
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         auto anya2 = {1, 1, 4, 5, 1, 4};
@@ -146,30 +149,35 @@ TEST(DequeTest, assign) {
         anya1 = anya2;
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         anya::deque<int> anya2{1, 1, 4, 5, 1, 4};
         anya1 = std::move(anya2);
         EXPECT_TRUE(anya1 != anya2);
     }
+
     {
         anya::deque<int> anya1;
         auto anya2 = {1, 1, 4, 5, 1, 4};
         anya1 = anya2;
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         anya::deque<int> anya2{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
         anya1.assign(15, 6);
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         anya::deque<int> anya2{1, 1, 4, 5, 1, 4};
         anya1.assign(anya2.begin(), anya2.end());
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         auto anya2 = {1, 1, 4, 5, 1, 4};
@@ -190,6 +198,7 @@ TEST(DequeTest, push_and_empalce) {
         anya1.emplace(anya1.end(), 4);
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         auto anya2 = {1, 1, 4, 5, 1, 4};
@@ -198,6 +207,7 @@ TEST(DequeTest, push_and_empalce) {
         }
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         auto anya2 = {1, 1, 4, 5, 1, 4};
@@ -209,6 +219,7 @@ TEST(DequeTest, push_and_empalce) {
         anya1.push_back(4);
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         auto anya2 = {1, 1, 4, 5, 1, 4};
@@ -217,6 +228,7 @@ TEST(DequeTest, push_and_empalce) {
         }
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1;
         auto anya2 = {1, 1, 4, 5, 1, 4};
@@ -228,6 +240,7 @@ TEST(DequeTest, push_and_empalce) {
         anya1.push_front(1);
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1 = {1, 1, 4, 5, 1, 4};
         auto anya2 = {1, 1, 4, 5};
@@ -235,6 +248,7 @@ TEST(DequeTest, push_and_empalce) {
         anya1.pop_back();
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1 = {1, 1, 4, 5, 1, 4};
         auto anya2 = {4, 5, 1, 4};
@@ -252,6 +266,7 @@ TEST(DequeTest, erase) {
         anya1.erase(anya1.begin());
         EXPECT_TRUE(anya1 == anya2);
     }
+
     {
         anya::deque<int> anya1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         anya1.erase(anya1.begin());

@@ -9,6 +9,7 @@
 #include "tests/heap_test.hpp"
 #include "tests/priority_queue_test.hpp"
 #include "tests/hashtable_test.hpp"
+#include "tests/unordered_map_test.hpp"
 #include <iterator>
 
 int main(int argc, char* argv[]) {
