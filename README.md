@@ -47,7 +47,7 @@
   序列容器上的一系列操作函数
 
 ### 关联式容器
-- [ ] hashtable  
+- [x] hashtable  
   哈希表
 - [ ] unordered_set  
   无序集合
