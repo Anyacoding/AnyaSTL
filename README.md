@@ -58,6 +58,9 @@
 - [ ] unordered_multimap  
   无序可重复映射
 
+## 并发控制
+- [x] spin_lock
+
 ## 算法
 - [x] 最小/最大操作
 - [x] 修改序列的操作
