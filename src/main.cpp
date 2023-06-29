@@ -14,7 +14,6 @@
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    std::string s;
     return RUN_ALL_TESTS();
 }
 
