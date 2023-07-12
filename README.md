@@ -74,6 +74,9 @@
 - [x] priority_queue  
   优先队列
 
+## 非标扩展
+- [x] lru_cache
+
 ## 代码规范
 命名空间：Anya
 
